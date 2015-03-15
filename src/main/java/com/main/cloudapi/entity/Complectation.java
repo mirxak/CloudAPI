@@ -29,6 +29,7 @@ public class Complectation extends BaseEntity {
     private Long gadgetsId;
     private Long carId;
     private Long price;
+    private Integer co2;
     //</editor-fold>
 
     @Override
@@ -120,6 +121,15 @@ public class Complectation extends BaseEntity {
 
     public void setPrice(Long price) {
         this.price = price;
+    }
+
+    @Column(name = "co2")
+    public Integer getCo2() {
+        return co2;
+    }
+
+    public void setCo2(Integer co2) {
+        this.co2 = co2;
     }
 
     //<editor-fold desc="Engine">
@@ -217,6 +227,7 @@ public class Complectation extends BaseEntity {
             setCarId(car.getId());
         }
     }
+
     //</editor-fold>
 
 }

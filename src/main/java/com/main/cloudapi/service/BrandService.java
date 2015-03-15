@@ -51,6 +51,9 @@ public class BrandService {
         if (!StringUtils.isBlank(edtBrand.getName())){
             brand.setName(edtBrand.getName());
         }
+        if (edtBrand.getServiceCoef() != null){
+            brand.setServiceCoef(edtBrand.getServiceCoef());
+        }
 
         return brandDAO.update(brand);
     }

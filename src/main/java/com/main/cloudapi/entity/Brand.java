@@ -27,6 +27,8 @@ public class Brand extends BaseEntity {
     @NotNull(message = "name is null")
     @NotEmpty(message = "name is empty")
     private String name;
+
+    private Float serviceCoef;
     //</editor-fold>
 
     @Override
@@ -52,6 +54,15 @@ public class Brand extends BaseEntity {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    @Column(name = "service_coef")
+    public Float getServiceCoef() {
+        return serviceCoef;
+    }
+
+    public void setServiceCoef(Float serviceCoef) {
+        this.serviceCoef = serviceCoef;
     }
 
     //<editor-fold desc="Car">
