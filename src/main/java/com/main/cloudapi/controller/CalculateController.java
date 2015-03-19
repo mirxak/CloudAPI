@@ -18,7 +18,7 @@ public class CalculateController extends BaseController implements CalculateCont
 
     @Override
     public Float calculateService(@RequestBody String json) {
-        return calculateService.calcService(json);
+        return null;
     }
 
     @Override
@@ -26,8 +26,4 @@ public class CalculateController extends BaseController implements CalculateCont
         return null;
     }
 
-    @Override
-    public Float calculateKASKO(@RequestBody String json) {
-        return null;
-    }
 }

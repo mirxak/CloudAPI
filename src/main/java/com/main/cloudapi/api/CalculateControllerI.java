@@ -20,8 +20,4 @@ public interface CalculateControllerI {
     @ResponseBody
     public Float calculateOSAGO(@RequestBody String json);
 
-    @RequestMapping(value = "/kasko", method = RequestMethod.POST)
-    @ResponseBody
-    public Float calculateKASKO(@RequestBody String json);
-
 }

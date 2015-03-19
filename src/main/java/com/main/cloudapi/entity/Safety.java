@@ -69,7 +69,7 @@ public class Safety extends BaseEntity {
         this.esp = esp;
     }
 
-    @Column(name = "airbag_count")
+    @Column(name = "airbags_count")
     public Integer getAirbagsCount() {
         return airbagsCount;
     }

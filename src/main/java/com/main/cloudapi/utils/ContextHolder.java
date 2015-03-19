@@ -22,7 +22,15 @@ public class ContextHolder {
     }
 
     public static class Data{
+        private Integer milage_partition;
 
+        public Integer getMilage_partition() {
+            return Integer.valueOf(MainConfig.get("milage.partition"));
+        }
+
+        public void setMilage_partition(Integer milage_partition) {
+            this.milage_partition = milage_partition;
+        }
     }
 }
 

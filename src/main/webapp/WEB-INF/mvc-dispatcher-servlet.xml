@@ -13,12 +13,12 @@
             <bean class="org.springframework.http.converter.StringHttpMessageConverter">
                 <property name="writeAcceptCharset" value="true"/>
             </bean>
-            <!--<bean class="klab.backend.utils.json.JacksonView2HttpMessageConverter">-->
-            <!--<property name="objectMapper">-->
-            <!--<bean class="klab.backend.utils.json.KJsonMapper">-->
-            <!--</bean>-->
-            <!--</property>-->
-            <!--</bean>-->
+            <bean class="com.main.cloudapi.utils.JacksonView2HttpMessageConverter">
+                <property name="objectMapper">
+                    <bean class="com.main.cloudapi.utils.KJsonMapper">
+                    </bean>
+                </property>
+            </bean>
         </mvc:message-converters>
     </mvc:annotation-driven>
 

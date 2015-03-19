@@ -199,7 +199,7 @@ public class Complectation extends BaseEntity {
     private Gadget gadget;
 
     @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "gadget_id")
+    @JoinColumn(name = "gadgets_id")
     @Where(clause = "coalesce(is_deleted,0) <> 1")
     public Gadget getGadget() {
         return gadget;
