@@ -29,6 +29,8 @@ public class CarService extends BaseEntity {
     private Integer milage;
     private Integer serviceTime;
     private Long brandId;
+    private Long carId;
+    private Long complectationId;
     //</editor-fold>
 
     @Override
@@ -107,12 +109,29 @@ public class CarService extends BaseEntity {
     }
 
     @Column(name = "brand_id")
-    @NotNull(message = "Brand is null")
     public Long getBrandId() {
         return brandId;
     }
 
     public void setBrandId(Long brandId) {
         this.brandId = brandId;
+    }
+
+    @Column(name = "car_id")
+    public Long getCarId() {
+        return carId;
+    }
+
+    public void setCarId(Long carId) {
+        this.carId = carId;
+    }
+
+    @Column(name = "complectation_id")
+    public Long getComplectationId() {
+        return complectationId;
+    }
+
+    public void setComplectationId(Long complectationId) {
+        this.complectationId = complectationId;
     }
 }

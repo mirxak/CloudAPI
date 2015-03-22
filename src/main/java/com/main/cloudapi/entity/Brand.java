@@ -3,12 +3,14 @@ package com.main.cloudapi.entity;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.main.cloudapi.entity.base.BaseEntity;
+import com.main.cloudapi.utils.UnProxierLazyObjects;
 import org.hibernate.annotations.Where;
 import org.hibernate.validator.constraints.NotEmpty;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 /**
@@ -29,6 +31,7 @@ public class Brand extends BaseEntity {
     private String name;
 
     private Float serviceCoef;
+    private String imgUrl;
     //</editor-fold>
 
     @Override
@@ -65,13 +68,25 @@ public class Brand extends BaseEntity {
         this.serviceCoef = serviceCoef;
     }
 
+    @Column(name = "img_url")
+    public String getImgUrl() {
+        return imgUrl;
+    }
+
+    public void setImgUrl(String imgUrl) {
+        this.imgUrl = imgUrl;
+    }
+
     //<editor-fold desc="Car">
     @JsonIgnore
-    private Set<Car> cars = new HashSet<>();
+    private Set<Car> cars = new LinkedHashSet<>();
 
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "brand")
     @Where(clause = "coalesce(is_deleted,0) <> 1")
     public Set<Car> getCars() {
+        if ((cars == null) || (cars.isEmpty())){
+            return new LinkedHashSet<>(UnProxierLazyObjects.unproxy(cars));
+        }
         return cars;
     }
 

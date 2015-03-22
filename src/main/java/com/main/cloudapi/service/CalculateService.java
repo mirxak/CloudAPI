@@ -15,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -118,6 +119,18 @@ public class CalculateService {
     public Float calculateOSAGO(){
 
         return null;
+    }
+
+    private List<Complectation> getFilterComplectations(CalcFilter calcFilter){
+
+        return Collections.emptyList();
+    }
+
+    public String calculateMain(String json){
+        CalcFilter calcFilter = JsonUtils.getFromJson(json, CalcFilter.class, true);
+
+
+        return "ok";
     }
 
     @JsonIgnoreProperties(ignoreUnknown = true)

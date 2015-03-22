@@ -50,12 +50,12 @@ public class CarService {
     public Car editCar(Long brandID, Long id, String json){
         Car car = getById(brandID, id);
         Car edtCar = JsonUtils.getFromJson(json, Car.class, true);
-        car.setName(edtCar.getName());
-        car.setCar_class(edtCar.getCar_class());
+        Brand brand = car.getBrand();
         if (!car.getBrandId().equals(edtCar.getBrandId())){
-            Brand brand = brandService.getById(edtCar.getBrandId());
-            car.setBrand(brand);
+            brand = brandService.getById(edtCar.getBrandId());
         }
+        JsonUtils.update(json, car, true);
+        car.setBrand(brand);
         return carDAO.update(car);
     }
 
@@ -65,5 +65,10 @@ public class CarService {
         Car car = getById(brandID, id);
         carDAO.delete(car);
         return car;
+    }
+
+    @Transactional
+    public Car simpleUpdate(Car car){
+        return carDAO.update(car);
     }
 }

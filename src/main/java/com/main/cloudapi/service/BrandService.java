@@ -73,4 +73,8 @@ public class BrandService {
         return brand;
     }
 
+    @Transactional
+    public Brand simpleUpdate(Brand brand){
+        return brandDAO.update(brand);
+    }
 }

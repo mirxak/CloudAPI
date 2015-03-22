@@ -26,4 +26,9 @@ public class CalculateController extends BaseController implements CalculateCont
         return null;
     }
 
+    @Override
+    public String calculateMain(@RequestBody String json) {
+        return null;
+    }
+
 }

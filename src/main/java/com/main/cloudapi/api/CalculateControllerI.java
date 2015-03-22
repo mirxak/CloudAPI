@@ -20,4 +20,8 @@ public interface CalculateControllerI {
     @ResponseBody
     public Float calculateOSAGO(@RequestBody String json);
 
+    @RequestMapping(value = "/main", method = RequestMethod.POST)
+    @ResponseBody
+    public String calculateMain(@RequestBody String json);
+
 }
