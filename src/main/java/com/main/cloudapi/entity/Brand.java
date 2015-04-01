@@ -32,6 +32,7 @@ public class Brand extends BaseEntity {
 
     private Float serviceCoef;
     private String imgUrl;
+    private Float creditPercent;
     //</editor-fold>
 
     @Override
@@ -77,6 +78,15 @@ public class Brand extends BaseEntity {
         this.imgUrl = imgUrl;
     }
 
+    @Column(name = "credit_percent")
+    public Float getCreditPercent() {
+        return creditPercent;
+    }
+
+    public void setCreditPercent(Float creditPercent) {
+        this.creditPercent = creditPercent;
+    }
+
     //<editor-fold desc="Car">
     @JsonIgnore
     private Set<Car> cars = new LinkedHashSet<>();
@@ -93,6 +103,7 @@ public class Brand extends BaseEntity {
     public void setCars(Set<Car> cars) {
         this.cars = cars;
     }
+
     //</editor-fold>
 
 }

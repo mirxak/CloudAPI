@@ -1,37 +1,59 @@
 package com.main.cloudapi.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Created by mirxak on 22.03.15.
  */
 // Входные параметры для расчетов
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class CalcFilter {
 
     //<editor-fold desc="fields">
-    private Long brand_id;
-    private Integer volumeMin;
-    private Integer volumeMax;
-    private Integer powerMin;
-    private Integer powerMax;
-    private String gearbox;
-    private String gearing;
-    private Float accelerationToHundMin;
-    private Float accelerationToHundMax;
-    private Integer fullSpeedMin;
-    private Integer fullSpeedMax;
+    private Long brand_id; // id марки
+    private Integer volumeMin; // минимальный объем двигателя
+    private Integer volumeMax; // максимальный объем двигателя
+    private Integer powerMin; // мин мощность
+    private Integer powerMax; // макс мощность
+    private List<String> gearbox; // вид коробки передач
+    private List<String> gearing; // привод
+    private Float accelerationToHundMin; // мин разгон до 100
+    private Float accelerationToHundMax; // макс разгон до 100
+    private Integer fullSpeedMin; // макс скорость нижняя граница
+    private Integer fullSpeedMax; // макс скорость верхняя граница
     private Integer fuelConsumCityMin;
     private Integer fuelConsumCityMax;
     private Integer fuelConsumTrackMin;
     private Integer fuelConsumTrackMax;
     private Integer fuelConsumMixedMin;
     private Integer fuelConsumMixedMax;
-    private Integer clearanceMin;
+    private Integer clearanceMin; // дорожный просвет
     private Integer clearanceMax;
-    private Integer luggageAmountMin;
+    private Integer luggageAmountMin; // объем багажника
     private Integer luggageAmountMax;
-    private Integer fuelCapacityMin;
+    private Integer fuelCapacityMin; // объем бака
     private Integer fuelCapacityMax;
-    private Long complectationPriceMin;
+    private Long complectationPriceMin; // цена комплектации
     private Long complectationPriceMax;
+
+    // комплектации, которые выбрал пользователь, для сравнения
+    private List<Complectation> userComplectations = new ArrayList<>();
+
+    private Integer milage; // пробег
+    private Float fuel_price; // стоимость топлива
+    private Float percent; // процентная ставка(необязательное)
+    private Integer is_credit; // будет ли использоваться кредит
+    private Integer min_time_credit; //минимальный срок кредитования в МЕСЯЦАХ!!!
+    private Integer max_time_credit; //максимальный срок кредитования в МЕСЯЦАХ!!!
+    private Integer time_credit; // срок кредитования
+    private Long first_payment; // первый взнос
+    private Integer driving_experience; // водительский стаж
+    private Integer age; // возраст
+    private Integer expense_min; // расход в месяц минимальный
+    private Integer expense_max; // расход в месяц максимальный
     //</editor-fold>
 
     public Long getBrand_id() {
@@ -72,22 +94,6 @@ public class CalcFilter {
 
     public void setPowerMax(Integer powerMax) {
         this.powerMax = powerMax;
-    }
-
-    public String getGearbox() {
-        return gearbox;
-    }
-
-    public void setGearbox(String gearbox) {
-        this.gearbox = gearbox;
-    }
-
-    public String getGearing() {
-        return gearing;
-    }
-
-    public void setGearing(String gearing) {
-        this.gearing = gearing;
     }
 
     public Float getAccelerationToHundMin() {
@@ -232,5 +238,125 @@ public class CalcFilter {
 
     public void setComplectationPriceMax(Long complectationPriceMax) {
         this.complectationPriceMax = complectationPriceMax;
+    }
+
+    public List<Complectation> getUserComplectations() {
+        return userComplectations;
+    }
+
+    public void setUserComplectations(List<Complectation> userComplectations) {
+        this.userComplectations = userComplectations;
+    }
+
+    public List<String> getGearbox() {
+        return gearbox;
+    }
+
+    public void setGearbox(List<String> gearbox) {
+        this.gearbox = gearbox;
+    }
+
+    public List<String> getGearing() {
+        return gearing;
+    }
+
+    public void setGearing(List<String> gearing) {
+        this.gearing = gearing;
+    }
+
+    public Integer getMilage() {
+        return milage;
+    }
+
+    public void setMilage(Integer milage) {
+        this.milage = milage;
+    }
+
+    public Float getFuel_price() {
+        return fuel_price;
+    }
+
+    public void setFuel_price(Float fuel_price) {
+        this.fuel_price = fuel_price;
+    }
+
+    public Float getPercent() {
+        return percent;
+    }
+
+    public void setPercent(Float percent) {
+        this.percent = percent;
+    }
+
+    public Integer getMin_time_credit() {
+        return min_time_credit;
+    }
+
+    public void setMin_time_credit(Integer min_time_credit) {
+        this.min_time_credit = min_time_credit;
+    }
+
+    public Integer getMax_time_credit() {
+        return max_time_credit;
+    }
+
+    public void setMax_time_credit(Integer max_time_credit) {
+        this.max_time_credit = max_time_credit;
+    }
+
+    public Integer getTime_credit() {
+        return time_credit;
+    }
+
+    public void setTime_credit(Integer time_credit) {
+        this.time_credit = time_credit;
+    }
+
+    public Long getFirst_payment() {
+        return first_payment;
+    }
+
+    public void setFirst_payment(Long first_payment) {
+        this.first_payment = first_payment;
+    }
+
+    public Integer getDriving_experience() {
+        return driving_experience;
+    }
+
+    public void setDriving_experience(Integer driving_experience) {
+        this.driving_experience = driving_experience;
+    }
+
+    public Integer getAge() {
+        return age;
+    }
+
+    public void setAge(Integer age) {
+        this.age = age;
+    }
+
+    public Integer getExpense_min() {
+        return expense_min;
+    }
+
+    public void setExpense_min(Integer expense_min) {
+        this.expense_min = expense_min;
+    }
+
+    public Integer getExpense_max() {
+        return expense_max;
+    }
+
+    public void setExpense_max(Integer expense_max) {
+        this.expense_max = expense_max;
+    }
+
+    public Integer getIs_credit() {
+        return (is_credit == null) ? 0 : is_credit;
+    }
+
+    public void setIs_credit(Integer is_credit) {
+        this.is_credit = is_credit;
     }
 }

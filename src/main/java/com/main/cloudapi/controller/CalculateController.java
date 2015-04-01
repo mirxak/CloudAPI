@@ -7,6 +7,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestBody;
 
+import java.util.List;
+
 /**
  * Created by mirxak on 15.03.15.
  */
@@ -27,8 +29,8 @@ public class CalculateController extends BaseController implements CalculateCont
     }
 
     @Override
-    public String calculateMain(@RequestBody String json) {
-        return null;
+    public List<CalculateService.CalculateResult> calculateMain(@RequestBody String json) {
+        return calculateService.calculateMain(json);
     }
 
 }

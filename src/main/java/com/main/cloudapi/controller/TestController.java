@@ -37,7 +37,7 @@ public class TestController extends BaseController {
             throw new ThrowFabric.BadRequestException("brands is null");
         }
         for (Brand brand : brands){
-            String img_url = BASE_URL + brand.getName() + "/" + brand.getName() + ".png";
+            String img_url = BASE_URL + brand.getName().replaceAll(" ", "_") + "/" + brand.getName().replaceAll(" ", "_") + ".png";
             brand.setImgUrl(img_url);
             brandService.simpleUpdate(brand);
 
@@ -45,11 +45,11 @@ public class TestController extends BaseController {
             Set<Car> cars = brand.getCars();
             if (cars.isEmpty())continue;
             for (Car car : cars){
-                car.setImgUrl(BASE_URL + brand.getName() + "/" + car.getName().replaceAll(" ", "_") + ".jpeg");
-                car.setImgUrl1(BASE_URL + brand.getName() + "/" + car.getName().replaceAll(" ", "_") + "_" + 1 + ".jpeg");
-                car.setImgUrl2(BASE_URL + brand.getName() + "/" + car.getName().replaceAll(" ", "_") + "_" + 2 + ".jpeg");
-                car.setImgUrl3(BASE_URL + brand.getName() + "/" + car.getName().replaceAll(" ", "_") + "_" + 3 + ".jpeg");
-                car.setImgUrl4(BASE_URL + brand.getName() + "/" + car.getName().replaceAll(" ", "_") + "_" + 4 + ".jpeg");
+                car.setImgUrl(BASE_URL + brand.getName().replaceAll(" ", "_") + "/" + car.getName().replaceAll(" ", "_") + ".jpeg");
+                car.setImgUrl1(BASE_URL + brand.getName().replaceAll(" ", "_") + "/" + car.getName().replaceAll(" ", "_") + "_" + 1 + ".jpeg");
+                car.setImgUrl2(BASE_URL + brand.getName().replaceAll(" ", "_") + "/" + car.getName().replaceAll(" ", "_") + "_" + 2 + ".jpeg");
+                car.setImgUrl3(BASE_URL + brand.getName().replaceAll(" ", "_") + "/" + car.getName().replaceAll(" ", "_") + "_" + 3 + ".jpeg");
+                car.setImgUrl4(BASE_URL + brand.getName().replaceAll(" ", "_") + "/" + car.getName().replaceAll(" ", "_") + "_" + 4 + ".jpeg");
                 carService.simpleUpdate(car);
             }
         }

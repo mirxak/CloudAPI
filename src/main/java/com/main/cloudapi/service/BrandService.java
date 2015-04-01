@@ -54,6 +54,9 @@ public class BrandService {
         if (edtBrand.getServiceCoef() != null){
             brand.setServiceCoef(edtBrand.getServiceCoef());
         }
+        if (edtBrand.getCreditPercent() != null){
+            brand.setCreditPercent(edtBrand.getCreditPercent());
+        }
 
         return brandDAO.update(brand);
     }
