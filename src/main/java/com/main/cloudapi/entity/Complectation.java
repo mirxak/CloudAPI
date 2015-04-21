@@ -2,7 +2,9 @@ package com.main.cloudapi.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonView;
 import com.main.cloudapi.entity.base.BaseEntity;
+import com.main.cloudapi.entity.views.ComplectationView;
 import org.hibernate.annotations.Where;
 import org.hibernate.validator.constraints.NotEmpty;
 
@@ -211,12 +213,13 @@ public class Complectation extends BaseEntity {
     //</editor-fold>
 
     //<editor-fold desc="Car">
-    @JsonIgnore
+//    @JsonIgnore
     private Car car;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "car_id")
     @Where(clause = "coalesce(is_deleted,0) <> 1")
+    @JsonView(value = ComplectationView.ComplectationCar.class)
     public Car getCar() {
         return car;
     }

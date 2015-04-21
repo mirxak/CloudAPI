@@ -19,18 +19,17 @@ public class CalculateController extends BaseController implements CalculateCont
     CalculateService calculateService;
 
     @Override
-    public Float calculateService(@RequestBody String json) {
-        return null;
+    public CalculateService.FrontendResult calculateMain(@RequestBody String json) {
+        CalculateService.FrontendResult frontendResult = new CalculateService.FrontendResult();
+        frontendResult.calculateResults = calculateService.calculateMain(json);
+        return frontendResult ;
     }
 
     @Override
-    public Float calculateOSAGO(@RequestBody String json) {
-        return null;
-    }
-
-    @Override
-    public List<CalculateService.CalculateResult> calculateMain(@RequestBody String json) {
-        return calculateService.calculateMain(json);
+    public CalculateService.FrontendResult calculateUserComplectations(@RequestBody String json) {
+        CalculateService.FrontendResult frontendResult = new CalculateService.FrontendResult();
+        frontendResult.calculateResults = calculateService.calculateUserComplectations(json);
+        return frontendResult;
     }
 
 }

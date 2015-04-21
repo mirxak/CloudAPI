@@ -50,11 +50,12 @@ public class CalculateService {
         if ((settingsList == null) || (settingsList.isEmpty())){
             throw new ThrowFabric.BadRequestException("error getting settings");
         }
-        List<CoefLength> coefLengths = JsonUtils.getList(settingsList.get(0).getSetting(), CoefLength.class, true);
+        List<SettingsParameters.CoefLength> coefLengths = JsonUtils.getList(settingsList.get(0).getSetting(),
+                                                     SettingsParameters.CoefLength.class, true);
         Complectation complectation = complectationDAO.getById(serviceParams.complectation_id, true);
         Integer carLength = getLengthOfBody(complectation.getBody());
         Float result = null;
-        for (CoefLength coefLength : coefLengths){
+        for (SettingsParameters.CoefLength coefLength : coefLengths){
             if ((carLength >= coefLength.min_length) && (carLength <= coefLength.max_length)){
                 result = coefLength.coef;
             }
@@ -75,6 +76,8 @@ public class CalculateService {
         Integer milage_partition = ContextHolder.getData().getMilage_partition();
 //        Float lengthCoef = getLengthCoef(serviceParams);
         Float lengthCoef = 1.0f; // временно
+        Float priceCoef = 0.5f; // временно
+        Float serviceCoef = (brand.getServiceCoef() == null) ? 1.0f : brand.getServiceCoef();
 
         Float price = new Float(0f);
         if (serviceParams.milage <= milage_partition){
@@ -83,29 +86,39 @@ public class CalculateService {
                 servTimes.add(i);
             }
             // get by serviceTime for 3 years
-            criteria.add(Restrictions.eq("brandId", serviceParams.brandId))
+            criteria.add(Restrictions.or(Restrictions.eq("brandId", serviceParams.brandId),
+                                         Restrictions.isNull("brandId")))
+                    .add(Restrictions.or(Restrictions.eq("carId", serviceParams.carId),
+                                         Restrictions.isNull("carId")))
+                    .add(Restrictions.or(Restrictions.eq("complectationId", serviceParams.brandId),
+                                         Restrictions.isNull("complectationId")))
                     .add(Restrictions.in("serviceTime", servTimes));
             carServices = carServiceDAO.getAll(BaseDAO.STD_OFFSET, BaseDAO.STD_LIMIT, criteria);
             if ((carServices == null) || (carServices.isEmpty())){
-                throw new ThrowFabric.BadRequestException("There are no services for brand=" + brand.getName());
+                return 0f;
             }
 
             for (com.main.cloudapi.entity.CarService carService : carServices){
-                price += carService.getPriceMin() + (carService.getPriceMax() - carService.getPriceMin())*brand.getServiceCoef()*lengthCoef;
+                price += (carService.getPriceMin() + (carService.getPriceMax() - carService.getPriceMin())*serviceCoef)*lengthCoef*priceCoef;
             }
         }
         else{
             Integer mil = serviceParams.milage * 3;
-            criteria.add(Restrictions.eq("brandId", serviceParams.brandId))
+            criteria.add(Restrictions.or(Restrictions.eq("brandId", serviceParams.brandId),
+                                         Restrictions.isNull("brandId")))
+                    .add(Restrictions.or(Restrictions.eq("carId", serviceParams.carId),
+                                         Restrictions.isNull("carId")))
+                    .add(Restrictions.or(Restrictions.eq("complectationId", serviceParams.brandId),
+                                         Restrictions.isNull("complectationId")))
                     .add(Restrictions.le("milage", mil));
 
             carServices = carServiceDAO.getAll(BaseDAO.STD_OFFSET, BaseDAO.STD_LIMIT, criteria);
             for (int i=0; i<carServices.size(); i++){
-                price += carServices.get(i).getPriceMin() + (carServices.get(i).getPriceMax() - carServices.get(i).getPriceMin())*brand.getServiceCoef()*lengthCoef;
+                price += (carServices.get(i).getPriceMin() + (carServices.get(i).getPriceMax() - carServices.get(i).getPriceMin())*serviceCoef)*lengthCoef*priceCoef;
                 if (i == carServices.size()-1){
                     Integer cur_m = carServices.get(i).getMilage();
                     while(cur_m + milage_partition <= serviceParams.milage){
-                        price += carServices.get(i).getPriceMin() + (carServices.get(i).getPriceMax() - carServices.get(i).getPriceMin())*brand.getServiceCoef()*lengthCoef;
+                        price += (carServices.get(i).getPriceMin() + (carServices.get(i).getPriceMax() - carServices.get(i).getPriceMin())*serviceCoef)*lengthCoef*priceCoef;
                         cur_m += milage_partition;
                     }
                 }
@@ -165,23 +178,55 @@ public class CalculateService {
         return (milage/1200)*fuelConsumMixed*fuelPrice;
     }
 
+    //Расчет необходимого количества ёлок, которые нужно посадить, чтобы покрыть
+    //загрязнение, исходя из co2 комплектации
+    private Integer calculateFirTrees(Complectation complectation, Integer milage){
+        Random random = new Random();
+        // ToDo Временная заглушка. co2 нужно брать из комплектации
+        // Расчитываем в кг, поэтому делим на 1000, т.к. в БД в граммах
+        Integer co2 = ((random.nextInt(100) + 100)*milage)/1000;
+
+        // 120 - одна ель за год выделяет 120 кг О2
+        return co2/120;
+    }
+
     //Расчет кредитования
-    private CreditResult calcCredit(CalcFilter calcFilter, Long cmp_price){
+    private CreditResult calcCredit(CalcFilter calcFilter, Long brandID, Long cmp_price){
         Double sk = new Double(cmp_price - calcFilter.getFirst_payment());
         Float percent;
+        CreditResult creditResult = new CreditResult();
         if (calcFilter.getPercent() != null){
             percent = calcFilter.getPercent();
         }
         else{
-            Brand brand = brandService.getById(calcFilter.getBrand_id());
+            Brand brand = brandService.getById(brandID);
             percent = brand.getCreditPercent();
         }
+
+        if (percent == null){
+            throw new ThrowFabric.BadRequestException("credit_percent is null");
+        }
+
         Double pc = new Double(percent/12);
         pc = pc / 100;
-        Double ap = sk*(pc + (pc/(Math.pow(1+pc, calcFilter.getTime_credit()-1) )-1));
-        CreditResult creditResult = new CreditResult();
+        Double ap;
+        Integer timeCredit;
+        if ((calcFilter.getAp() == null) && (calcFilter.getTime_credit() == null)){
+            throw new ThrowFabric.BadRequestException("ap and credit_time are null");
+        }
+        else if (calcFilter.getAp() == null){
+            timeCredit = calcFilter.getTime_credit();
+            ap = sk*(pc + (pc/(Math.pow(1+pc, timeCredit) )-1));
+        }
+        else{
+            ap = new Double(calcFilter.getAp());
+            Double x = ap/(ap - sk*pc);
+            Double y = 1 + pc;
+            timeCredit = new Integer(((Double)(Math.log(x)/Math.log(y))).intValue());
+        }
+
         creditResult.ap = ap;
-        creditResult.overpayment = ap*calcFilter.getTime_credit() - sk;
+        creditResult.overpayment = ap*timeCredit - sk;
         Double np = new Double(0);
         for (int i=0;i<calcFilter.getTime_credit();i++){
             np += sk*pc;
@@ -262,7 +307,7 @@ public class CalculateService {
         Integer df = 1;
         while (pf <= milage * 3){
             Float itr = (i1*pf + i2*df)*1.05f*1.04f*1.1f;
-            result.add(price - (price - price*itr)*0.8f);
+            result.add(price - (price - price*(itr/100))*0.8f);
             pf += milage;
             df++;
         }
@@ -270,11 +315,68 @@ public class CalculateService {
         return result;
     }
 
+    private List<CalculateResult> fillCalculateResult(List<Complectation> complectations, CalcFilter calcFilter){
+        List<CalculateResult> calculateResults = new ArrayList<>();
+        for (Complectation complectation : complectations){
+            ServiceParams serviceParams = new ServiceParams();
+            serviceParams.milage = calcFilter.getMilage();
+            serviceParams.brandId = complectation.getCar().getBrandId();
+            serviceParams.carId = complectation.getCarId();
+            serviceParams.complectation_id = complectation.getId();
+            CalculateResult calculateResult = new CalculateResult();
+            calculateResult.complectation = complectation;
+            calculateResult.TO = calcTOService(serviceParams);
+            calculateResult.month_fuel_cost = calcFuelCost(complectation.getEngineGearbox().getFuelConsumMixed(),
+                    calcFilter.getMilage(), calcFilter.getFuel_price());
+            if (calcFilter.getIs_credit().equals(1)){
+                calculateResult.creditResult = calcCredit(calcFilter, complectation.getCar().getBrandId(), complectation.getPrice());
+            }
+
+            switch (calcFilter.getKind_of_insurance()){
+                case 1 :
+                    calculateResult.OSAGO_price = calculateOSAGO(calcFilter, complectation.getEngineGearbox().getPower());
+                    break;
+                case 2:
+                    //ToDo Запилить API для расчета КАСКО
+                    calculateResult.KASKO_price = null;
+                    break;
+                default:
+                    break;
+            }
+
+            calculateResult.amortization = calcAmortization(complectation, calcFilter.getMilage());
+            // расчет в месяц
+            Float expense = calculateResult.TO/36 + calculateResult.month_fuel_cost;
+            if (calcFilter.getIs_credit().equals(1)){
+                expense += new Float(calculateResult.creditResult.ap);
+            }
+            expense += calculateResult.OSAGO_price/12;
+            expense += calculateResult.amortization.get(0)/12;
+            calculateResult.expense = expense;
+
+            calculateResult.firTrees = calculateFirTrees(complectation, calcFilter.getMilage());
+            calculateResults.add(calculateResult);
+        }
+
+        if (calcFilter.getExpense_max() != null){
+            List<CalculateResult> mainResult = new ArrayList<>();
+            for (CalculateResult calcRes : calculateResults){
+                if (calcRes.expense <= calcFilter.getExpense_max()){
+                    mainResult.add(calcRes);
+                }
+            }
+            calculateResults.clear();
+            calculateResults.addAll(mainResult);
+        }
+
+        return calculateResults;
+    }
+
     public List<CalculateResult> calculateMain(String json){
         CalcFilter calcFilter = JsonUtils.getFromJson(json, CalcFilter.class, true);
         calcFilter = validateFilter(calcFilter);
-        List<Complectation> complectations = complectationDAO.getForCalculate(calcFilter);
-        if (complectations.isEmpty()){
+        List<Complectation> complectations = complectationDAO.getForCalculate(calcFilter.getComplectationFilter());
+        if ((complectations.isEmpty()) && (calcFilter.getUserComplectations().isEmpty())){
             throw new ThrowFabric.BadRequestException("There are not complectations for this parameters");
         }
 
@@ -296,78 +398,81 @@ public class CalculateService {
             complectations.addAll(complectationDAO.getAll(BaseDAO.STD_OFFSET, BaseDAO.STD_LIMIT, criteria));
         }
 
-        List<CalculateResult> calculateResults = new ArrayList<>();
-        for (Complectation complectation : complectations){
-            ServiceParams serviceParams = new ServiceParams();
-            serviceParams.milage = calcFilter.getMilage();
-            serviceParams.brandId = calcFilter.getBrand_id();
-            serviceParams.complectation_id = complectation.getId();
-            CalculateResult calculateResult = new CalculateResult();
-            calculateResult.complectation = complectation;
-            calculateResult.TO = calcTOService(serviceParams);
-            calculateResult.month_fuel_cost = calcFuelCost(complectation.getEngineGearbox().getFuelConsumMixed(),
-                                                           calcFilter.getMilage(), calcFilter.getFuel_price());
-            if (calcFilter.getIs_credit().equals(1)){
-                calculateResult.creditResult = calcCredit(calcFilter, complectation.getPrice());
-            }
-            calculateResult.OSAGO_price = calculateOSAGO(calcFilter, complectation.getEngineGearbox().getPower());
-            calculateResult.amortization = calcAmortization(complectation, calcFilter.getMilage());
-            // расчет в месяц
-            Float expense = calculateResult.TO/36 + calculateResult.month_fuel_cost;
-            if (calcFilter.getIs_credit().equals(1)){
-                expense += new Float(calculateResult.creditResult.ap);
-            }
-            expense += calculateResult.OSAGO_price/12;
-            expense += calculateResult.amortization.get(0)/12;
-            calculateResult.expense = expense;
-            calculateResults.add(calculateResult);
+        return fillCalculateResult(complectations, calcFilter);
+    }
+
+    public List<CalculateResult> calculateUserComplectations(String json){
+        CalcFilter calcFilter = JsonUtils.getFromJson(json, CalcFilter.class, true);
+        List<Complectation> complectations = new ArrayList<>();
+
+        if (calcFilter.getUserComplectations().isEmpty()){
+            throw new ThrowFabric.BadRequestException("user_complectations is empty");
         }
 
-        List<CalculateResult> mainResult = new ArrayList<>();
-        for (CalculateResult calcRes : calculateResults){
-            if ((calcRes.expense >= calcFilter.getExpense_min()) &&
-                (calcRes.expense <= calcFilter.getExpense_max())){
-                mainResult.add(calcRes);
+        Set<Long> curIds = new HashSet<>();
+        for (Complectation c : complectations){
+            curIds.add(c.getId());
+        }
+
+        List<Long> cIds = new ArrayList<>();
+        for (Complectation cmp : calcFilter.getUserComplectations()){
+            if ((cmp.getId() != null) && (!curIds.contains(cmp.getId()))){
+                cIds.add(cmp.getId());
             }
         }
 
-        return mainResult;
+        Criteria criteria = complectationDAO.createCriteria();
+        criteria.add(Restrictions.in("id", cIds));
+        complectations.addAll(complectationDAO.getAll(BaseDAO.STD_OFFSET, BaseDAO.STD_LIMIT, criteria));
+
+        return fillCalculateResult(complectations, calcFilter);
     }
 
     // нулл поля сделать в мин или макс по типу
     private CalcFilter validateFilter(CalcFilter calcFilter){
-        Field[] fields = calcFilter.getClass().getFields();
+        Field[] fields = CalcFilter.ComplectationFilter.class.getDeclaredFields();
         try{
+            CalcFilter.ComplectationFilter complectationFilter = calcFilter.getComplectationFilter();
             for (Field field : fields){
+                field.setAccessible(true);
+                if (field.get(complectationFilter) != null)continue;
                 if (field.getType() == Integer.class){
                     if (field.getName().indexOf("Min") >= 0){
-                        field.set(calcFilter, Integer.MIN_VALUE);
+                        field.set(complectationFilter, Integer.MIN_VALUE);
                     }
                     else if (field.getName().indexOf("Max") >= 0){
-                        field.set(calcFilter, Integer.MAX_VALUE);
+                        field.set(complectationFilter, Integer.MAX_VALUE);
                     }
                 }
                 else if (field.getType() == Float.class){
                     if (field.getName().indexOf("Min") >= 0){
-                        field.set(calcFilter, Float.MIN_VALUE);
+                        field.set(complectationFilter, Float.MIN_VALUE);
                     }
                     else if (field.getName().indexOf("Max") >= 0){
-                        field.set(calcFilter, Float.MAX_VALUE);
+                        field.set(complectationFilter, Float.MAX_VALUE);
                     }
                 }
                 else if (field.getType() == Long.class){
                     if (field.getName().indexOf("Min") >= 0){
-                        field.set(calcFilter, Long.MIN_VALUE);
+                        field.set(complectationFilter, Long.MIN_VALUE);
                     }
                     else if (field.getName().indexOf("Max") >= 0){
-                        field.set(calcFilter, Long.MAX_VALUE);
+                        field.set(complectationFilter, Long.MAX_VALUE);
                     }
                 }
             }
+            calcFilter.setComplectationFilter(complectationFilter);
         }
         catch (Exception e){
             throw new ThrowFabric.BadRequestException("There is some error in filling calcFilter");
         }
+
+        if (calcFilter.getInsured_sum() == null){
+            if ((calcFilter.getAge() == null) || (calcFilter.getDriving_experience() == null)){
+                throw new ThrowFabric.BadRequestException("insured_sum, age, driving_experience are null");
+            }
+        }
+
         return calcFilter;
     }
 
@@ -375,14 +480,8 @@ public class CalculateService {
     public static class ServiceParams{
         public Integer milage; // ежегодный пробег клиента
         public Long brandId; // id марки
+        public Long carId;
         public Long complectation_id;
-    }
-
-    @JsonIgnoreProperties(ignoreUnknown = true)
-    public static class CoefLength{
-        public Integer min_length;
-        public Integer max_length;
-        public Float coef;
     }
 
     public static class CalculateResult{
@@ -391,13 +490,20 @@ public class CalculateService {
         public Float month_fuel_cost;
         public CreditResult creditResult;
         public Float OSAGO_price; // на 1 год
+        public Float KASKO_price;
         public List<Float> amortization;
         public Float expense;
+        public Integer firTrees; // на 1 год!
     }
 
     public static class CreditResult{
         public Double ap; // ежемесячный платеж по кредиту
+        public Integer kp; // срок кредитования
         public Double overpayment;
         public Double percent_per_year;
+    }
+
+    public static class FrontendResult{
+        public List<CalculateResult> calculateResults;
     }
 }

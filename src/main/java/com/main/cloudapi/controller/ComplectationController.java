@@ -4,7 +4,9 @@ import com.main.cloudapi.api.ComplectationControllerI;
 import com.main.cloudapi.controller.base.BaseController;
 import com.main.cloudapi.entity.Brand;
 import com.main.cloudapi.entity.Complectation;
+import com.main.cloudapi.entity.views.ComplectationView;
 import com.main.cloudapi.service.ComplectationService;
+import com.main.cloudapi.utils.JsonWebContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -23,11 +25,13 @@ public class ComplectationController extends BaseController implements Complecta
 
     @Override
     public Complectation getComplectation(@PathVariable String brandID, @PathVariable String carID, @PathVariable String id) {
+        JsonWebContext.addMapperView(ComplectationView.ComplectationCar.class);
         return complectationService.getById(parseID(brandID), parseID(carID), parseID(id));
     }
 
     @Override
     public List<Complectation> getComplectations(@PathVariable String brandID, @PathVariable String carID) {
+        JsonWebContext.addMapperView(ComplectationView.ComplectationCar.class);
         return complectationService.getComplectations(parseID(brandID), parseID(carID));
     }
 

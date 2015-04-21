@@ -136,9 +136,6 @@ public class Car extends BaseEntity {
     @JoinColumn(name = "brand_id")
     @Where(clause = "coalesce(is_deleted,0) <> 1")
     public Brand getBrand() {
-        if (brand == null){
-            return UnProxierLazyObjects.unproxy(brand);
-        }
         return brand;
     }
 
@@ -157,9 +154,6 @@ public class Car extends BaseEntity {
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "car")
     @Where(clause = "coalesce(is_deleted,0) <> 1")
     public Set<Complectation> getComplectations() {
-        if ((complectations == null) || (complectations.isEmpty())){
-            return new LinkedHashSet<>(UnProxierLazyObjects.unproxy(complectations));
-        }
         return complectations;
     }
 

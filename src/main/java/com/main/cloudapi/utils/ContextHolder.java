@@ -1,5 +1,7 @@
 package com.main.cloudapi.utils;
 
+import org.apache.commons.lang3.StringUtils;
+
 /**
  * Created by mirxak on 23.01.15.
  */
@@ -25,6 +27,8 @@ public class ContextHolder {
         private Integer milage_partition;
 
         public Integer getMilage_partition() {
+            String milpart = MainConfig.get("milage.partition");
+            if (StringUtils.isBlank(milpart))return 15000;
             return Integer.valueOf(MainConfig.get("milage.partition"));
         }
 

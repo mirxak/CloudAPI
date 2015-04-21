@@ -33,7 +33,7 @@ public class ComplectationDAO extends BaseDAO<Complectation> {
     private String getSQLForGear(List<String> gearbox, List<String> gearing){
         String sqlQ = "(";
         for (int i=0; i<gearbox.size(); i++){
-            sqlQ += "(eg.gearbox like '" + gearbox.get(i) + "%')";
+            sqlQ += "(lower(eg.gearbox) like '" + gearbox.get(i).toLowerCase() + "%')";
             if (i != gearbox.size()-1){
                 sqlQ += " or ";
             }
@@ -41,7 +41,7 @@ public class ComplectationDAO extends BaseDAO<Complectation> {
         sqlQ += ") and (";
 
         for (int i=0; i<gearing.size(); i++){
-            sqlQ += "(eg.gearing='" + gearing.get(i) + "')";
+            sqlQ += "(lower(eg.gearing)='" + gearing.get(i).toLowerCase() + "')";
             if (i != gearing.size()-1){
                 sqlQ += " or ";
             }
@@ -51,7 +51,7 @@ public class ComplectationDAO extends BaseDAO<Complectation> {
         return sqlQ;
     }
 
-    public List<Complectation> getForCalculate(CalcFilter calcFilter){
+    public List<Complectation> getForCalculate(CalcFilter.ComplectationFilter calcFilter){
         Session session = getSession();
         String fields = "cmp.id as id, cmp.name as name, cmp.engine_id as engine_id, cmp.body_id as body_id, cmp.safety_id as safety_id, " +
                         "cmp.comfort_id as comfort_id, cmp.gadgets_id as gadgets_id, cmp.car_id car_id, cmp.price as price, " +
@@ -62,7 +62,7 @@ public class ComplectationDAO extends BaseDAO<Complectation> {
                        " as eg, " + Body.TABLE + " as b, " + Car.TABLE + " as c where (coalesce(cmp.is_deleted,0)<>1) " +
                        "and (cmp.engine_id=eg.id) and (coalesce(eg.is_deleted)<>1) and " +
                        "(cmp.body_id=b.id) and (coalesce(b.is_deleted)<>1) and " +
-                       "(cmp.car_id=c.id) and (coalesce(c.is_deleted)<>1) and (c.brand_id=:brandId) "+
+                       "(cmp.car_id=c.id) and (coalesce(c.is_deleted)<>1) and (c.brand_id in (:brandIds)) "+
                        "and ((eg.power >= :pwrMin) and (eg.power <= :pwrMax)) and " + getSQLForGear(calcFilter.getGearbox(), calcFilter.getGearing()) +
                        " and ((eg.acceleration_to_hund >= :accMin) and (eg.acceleration_to_hund <= :accMax)) " +
                        "and ((eg.full_speed >= :fsMin) and (eg.full_speed <= :fsMax)) " +
@@ -73,9 +73,10 @@ public class ComplectationDAO extends BaseDAO<Complectation> {
                        "and ((b.luggage_amount >= :laMin) and (b.luggage_amount <= :laMax)) " +
                        "and ((b.fuel_capacity >= :fcMin) and (b.fuel_capacity <= :fcMax)) " +
                        "and ((cmp.price >= :priceMin) and (cmp.price <= :priceMax))";
+//                       "and ((cmp.co2 >= :co2Min) and (cmp.co2 <= :co2Max))";
 
         Query sqlQuery = session.createSQLQuery(query).addEntity(Complectation.class);
-        sqlQuery.setBigInteger("brandId", BigInteger.valueOf(calcFilter.getBrand_id()));
+        sqlQuery.setParameterList("brandIds", calcFilter.getBrand_ids());
         sqlQuery.setInteger("pwrMin", calcFilter.getPowerMin());
         sqlQuery.setInteger("pwrMax", calcFilter.getPowerMax());
         sqlQuery.setFloat("accMin", calcFilter.getAccelerationToHundMin());
@@ -96,6 +97,8 @@ public class ComplectationDAO extends BaseDAO<Complectation> {
         sqlQuery.setInteger("fcMax", calcFilter.getFuelCapacityMax());
         sqlQuery.setBigInteger("priceMin", BigInteger.valueOf(calcFilter.getComplectationPriceMin()));
         sqlQuery.setBigInteger("priceMax", BigInteger.valueOf(calcFilter.getComplectationPriceMax()));
+//        sqlQuery.setInteger("co2Min", calcFilter.getCo2Min());
+//        sqlQuery.setInteger("co2Max", calcFilter.getCo2Max());
 
         List<Complectation> complectations = sqlQuery.list();
         if ((complectations == null) || (complectations.isEmpty())){

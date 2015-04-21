@@ -15,16 +15,12 @@ import java.util.List;
 @RequestMapping(headers = {"Accept=application/json", "Accept=application/v0+json"}, value = "/calculates")
 public interface CalculateControllerI {
 
-    @RequestMapping(value = "/service", method = RequestMethod.POST)
-    @ResponseBody
-    public Float calculateService(@RequestBody String json);
-
-    @RequestMapping(value = "/osago", method = RequestMethod.POST)
-    @ResponseBody
-    public Float calculateOSAGO(@RequestBody String json);
-
     @RequestMapping(value = "/main", method = RequestMethod.POST)
     @ResponseBody
-    public List<CalculateService.CalculateResult> calculateMain(@RequestBody String json);
+    public CalculateService.FrontendResult calculateMain(@RequestBody String json);
+
+    @RequestMapping(value = "/main/user-complectations", method = RequestMethod.POST)
+    @ResponseBody
+    public CalculateService.FrontendResult calculateUserComplectations(@RequestBody String json);
 
 }
