@@ -19,9 +19,17 @@ public interface UserControllerI {
     @ResponseBody
     public List<User> getUsers();
 
-    @RequestMapping(method = RequestMethod.POST)
+    @RequestMapping(value="register", method = RequestMethod.POST)
     @ResponseBody
-    public User addUser(@RequestBody String json);
+    public User register(@RequestBody String json);
+
+    @RequestMapping(value="login", method = RequestMethod.POST)
+    @ResponseBody
+    public User login(@RequestBody String json);
+
+    @RequestMapping(value = "{id}/activate", method = RequestMethod.POST)
+    @ResponseBody
+    User activate(@PathVariable String id, @RequestBody String json);
 
     @RequestMapping(value="/{id}", method = RequestMethod.POST)
     @ResponseBody

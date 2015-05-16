@@ -1,5 +1,6 @@
 package com.main.cloudapi.utils;
 
+import com.main.cloudapi.entity.User;
 import org.apache.commons.lang3.StringUtils;
 
 /**
@@ -23,8 +24,17 @@ public class ContextHolder {
         return data;
     }
 
+    public static User getUser(){
+        return getData().getUser();
+    }
+
+    public static void setUser(User user){
+        getData().setUser(user);
+    }
+
     public static class Data{
         private Integer milage_partition;
+        private User user;
 
         public Integer getMilage_partition() {
             String milpart = MainConfig.get("milage.partition");
@@ -34,6 +44,14 @@ public class ContextHolder {
 
         public void setMilage_partition(Integer milage_partition) {
             this.milage_partition = milage_partition;
+        }
+
+        public User getUser() {
+            return user;
+        }
+
+        public void setUser(User user) {
+            this.user = user;
         }
     }
 }
