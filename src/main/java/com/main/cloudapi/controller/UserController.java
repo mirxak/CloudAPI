@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.List;
 
@@ -21,13 +22,16 @@ public class UserController extends BaseController implements UserControllerI {
     UserService userService;
 
     @Override
-    public User getUser(@PathVariable String id) {
-        return null;
+    public User getUser(@PathVariable String id,
+                        @RequestParam(value = "access_token", defaultValue = "", required = false)String access_token) {
+        userService.validateToken(access_token);
+        return userService.getUser(parseID(id));
     }
 
     @Override
-    public List<User> getUsers() {
-        return null;
+    public List<User> getUsers(@RequestParam(value = "access_token", defaultValue = "", required = false)String access_token) {
+        userService.validateToken(access_token);
+        return userService.getUsers();
     }
 
     @Override
@@ -41,17 +45,28 @@ public class UserController extends BaseController implements UserControllerI {
     }
 
     @Override
-    public User activate(@PathVariable String id, @RequestBody String json) {
-        return userService.activate(parseID(id), json);
+    public User exit(@PathVariable String id,
+                     @RequestParam(value = "access_token", defaultValue = "", required = false)String access_token) {
+        userService.validateToken(access_token);
+        return userService.exit(parseID(id));
     }
 
     @Override
-    public User editUser(@PathVariable String id, @RequestBody String json) {
-        return null;
+    public User activate(@PathVariable String id, @PathVariable String activateToken) {
+        return userService.activate(parseID(id), activateToken);
     }
 
     @Override
-    public User deleteUser(@PathVariable String id) {
-        return null;
+    public User editUser(@PathVariable String id, @RequestBody String json,
+                         @RequestParam(value = "access_token", defaultValue = "", required = false)String access_token) {
+        userService.validateToken(access_token);
+        return userService.editUser(parseID(id), json);
+    }
+
+    @Override
+    public User deleteUser(@PathVariable String id,@RequestParam(value = "access_token", defaultValue = "", required = false)String access_token
+                           ) {
+        userService.validateToken(access_token);
+        return userService.deleteUser(parseID(id));
     }
 }

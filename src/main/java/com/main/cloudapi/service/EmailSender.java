@@ -51,19 +51,29 @@ public class EmailSender {
     @Transactional
     public Mail sendMail(Mail mail) throws MessagingException {
         Properties properties = System.getProperties();
+//        properties.setProperty("mail.transport.protocol", "smtp");
+//        properties.setProperty("mail.smtp.host", MainConfig.get("smtp.host"));
+//        properties.put("mail.smtp.auth", MainConfig.get("smtp.auth"));
+//        properties.put("mail.smtp.ssl.enable", MainConfig.get("smtp.ssl"));
+//        Session session = Session.getInstance(properties, new Authenticator() {
+//            @Override
+//            protected PasswordAuthentication getPasswordAuthentication() {
+//                return new PasswordAuthentication(MainConfig.get("smtp.user"), MainConfig.get("smtp.pass"));
+//            }
+//        });
         properties.setProperty("mail.transport.protocol", "smtp");
-        properties.setProperty("mail.smtp.host", MainConfig.get("smtp.host"));
-        properties.put("mail.smtp.auth", MainConfig.get("smtp.auth"));
-        properties.put("mail.smtp.ssl.enable", MainConfig.get("smtp.ssl"));
+        properties.setProperty("mail.smtp.host", "smtp.gmail.com");
+        properties.put("mail.smtp.auth", "true");
+        properties.put("mail.smtp.ssl.enable", "true");
         Session session = Session.getInstance(properties, new Authenticator() {
             @Override
             protected PasswordAuthentication getPasswordAuthentication() {
-                return new PasswordAuthentication(MainConfig.get("smtp.user"), MainConfig.get("smtp.pass"));
+                return new PasswordAuthentication("intellectdrive", "bonus2014");
             }
         });
 
         MimeMessage msg = new MimeMessage(session);
-        msg.setFrom(new InternetAddress(MainConfig.get("main.from")));
+        msg.setFrom(new InternetAddress("intellectdrive@gmail.com"));
         msg.addRecipient(Message.RecipientType.TO, new InternetAddress(mail.getEmail()));
         msg.setSubject(mail.getSubject());
         msg.setText(mail.getMessage());

@@ -1,14 +1,16 @@
 package com.main.cloudapi;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.main.cloudapi.constmes.ThrowFabric;
 import com.main.cloudapi.dao.ComplectationDAO;
-import com.main.cloudapi.entity.Brand;
-import com.main.cloudapi.entity.CalcFilter;
-import com.main.cloudapi.entity.Car;
-import com.main.cloudapi.entity.Complectation;
+import com.main.cloudapi.entity.*;
+import com.main.cloudapi.service.CalculateService;
 import com.main.cloudapi.service.CarService;
 import com.main.cloudapi.service.BrandService;
+import com.main.cloudapi.service.EmailSender;
+import com.main.cloudapi.service.callback.CallBackService;
 import com.main.cloudapi.utils.JsonUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.annotation.Rollback;
 import org.springframework.test.context.ContextConfiguration;
@@ -17,6 +19,7 @@ import org.springframework.test.context.transaction.TransactionConfiguration;
 import org.springframework.transaction.annotation.Transactional;
 import org.testng.annotations.Test;
 
+import javax.mail.MessagingException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -39,7 +42,13 @@ public class TestBD extends AbstractTransactionalTestNGSpringContextTests {
     CarService carService;
 
     @Autowired
-    ComplectationDAO complectationDAO;
+    CalculateService calculateService;
+
+    @Autowired
+    EmailSender emailSender;
+
+    @Autowired
+    CallBackService callBackService;
 
     @Test(enabled = true)
 //    @Rollback(value = false)
@@ -69,7 +78,7 @@ public class TestBD extends AbstractTransactionalTestNGSpringContextTests {
                 car.setImgUrl3(BASE_URL + brand.getName() + "/" + car.getName().replaceAll(" ", "_") + "_" + 3 + ".jpeg");
                 car.setImgUrl4(BASE_URL + brand.getName() + "/" + car.getName().replaceAll(" ", "_") + "_" + 4 + ".jpeg");
                 try{
-                carService.simpleUpdate(car);
+                    carService.simpleUpdate(car);
                 }
                 catch (Exception e){
                     System.out.println("!+++++++++++++++++++        car=" + car.getId());
@@ -82,41 +91,97 @@ public class TestBD extends AbstractTransactionalTestNGSpringContextTests {
 
     @Test(enabled = true)
     public void testFilter(){
-        CalcFilter calcFilter = new CalcFilter();
-        calcFilter.setBrand_id(208L);
-        calcFilter.setAccelerationToHundMin(1f);
-        calcFilter.setAccelerationToHundMax(15f);
-        calcFilter.setClearanceMin(100);
-        calcFilter.setClearanceMax(250);
-        calcFilter.setFuelCapacityMin(0);
-        calcFilter.setFuelCapacityMax(500);
-        calcFilter.setFuelConsumCityMin(0);
-        calcFilter.setFuelConsumCityMax(30);
-        calcFilter.setFuelConsumTrackMin(0);
-        calcFilter.setFuelConsumTrackMax(50);
-        calcFilter.setFuelConsumMixedMin(0);
-        calcFilter.setFuelConsumMixedMax(50);
-        calcFilter.setLuggageAmountMin(0);
-        calcFilter.setLuggageAmountMax(1000);
-        calcFilter.setComplectationPriceMin(0l);
-        calcFilter.setComplectationPriceMax(2000000l);
-        calcFilter.setFullSpeedMin(0);
-        calcFilter.setFullSpeedMax(500);
-        List<String> gearbox = new ArrayList<>();
-        gearbox.add("автоматическая");
-        gearbox.add("робот");
-        calcFilter.setGearbox(gearbox);
-        List<String> gearing = new ArrayList<>();
-        gearing.add("передний");
-        gearing.add("полный");
-        calcFilter.setGearing(gearing);
-        calcFilter.setVolumeMin(0);
-        calcFilter.setVolumeMax(5000);
-        calcFilter.setPowerMin(0);
-        calcFilter.setPowerMax(1000);
+        String calcJson = "{\"complectation_filter\":{\"brand_ids\":[211,213],\"gearbox\":[\"Автоматическая\",\"Механическая\",\"Робот\",\"Вариатор\"],\"gearing\":[\"Передний\",\"Задний\",\"Полный\"],\"complectation_price_min\":1,\"complectation_price_max\":10000000},\"fuel_price\":50,\"milage\":10000,\"is_credit\":0,\"kind_of_insurance\":1,\"driving_experience\":8,\"age\":28,\"expense_min\":10000,\"expense_max\":20000}";
 
-        List<Complectation> cmps = complectationDAO.getForCalculate(calcFilter);
-        System.out.println("!+++++++++++++      cmps.size=" + cmps.size());
+        calculateService.calculateMain(calcJson);
+//        System.out.println("!+++++++++++++      cmps.size=" + cmps.size());
     }
 
+    @Test(enabled = true)
+    public void test(){
+        Mail mail = new Mail();
+        mail.setSubject("test");
+        mail.setMessage("test");
+        mail.setEmail("mir-ehjnari@yandex.ru");
+        try {
+            emailSender.sendMail(mail);
+        } catch (MessagingException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Test(enabled = true)
+    public void testSetPkaskoNames(){
+        String apiKey = callBackService.get("http://pkasko.ru/auth/api?login=skyflyerswan@yandex.ru&password=123456", null);
+        if (StringUtils.isBlank(apiKey)){
+            throw new ThrowFabric.BadRequestException("callback result is null");
+        }
+
+        ApiKey ak = JsonUtils.getFromJson(apiKey, ApiKey.class, true);
+
+        String result = callBackService.get("http://pkasko.ru/calcservice/cars",
+                         Collections.singletonMap("X-Authorization", ak.api_key));
+        if (StringUtils.isBlank(result)){
+            throw new ThrowFabric.BadRequestException("callback result is null");
+        }
+
+        List<PkaskoBrand> pkaskoBrands = JsonUtils.getList(result, PkaskoBrand.class, true);
+        for (PkaskoBrand pkaskoBrand : pkaskoBrands){
+            for (PkaskoCar pkaskoCar : pkaskoBrand.models){
+                String nameLike = pkaskoBrand.name + " " + pkaskoCar.name;
+                nameLike = nameLike.replaceAll("'", "");
+                if (StringUtils.isBlank(nameLike)){
+                    System.err.println("!+++++++++++++++++++  error=" + JsonUtils.getJson(pkaskoBrand,true));
+                    System.err.println("!+++++++++++++++++++  error=" + JsonUtils.getJson(pkaskoCar, true));
+                    throw new RuntimeException();
+                }
+
+                List<Car> cars = carService.getDAO().getForPkasko(nameLike + "%");
+                if (cars.isEmpty())continue;
+                int i;
+                int count = 0;
+                for (i=0;i<cars.size();i++){
+                    Car car = cars.get(i);
+                    if (car.getName().equals(nameLike)){
+                        car.setPkaskoBrandName(pkaskoBrand.name);
+                        car.setPkaskoCarName(pkaskoCar.name);
+                        carService.simpleUpdate(car);
+                        count++;
+//                        break;
+                    }
+                    else if ((StringUtils.isBlank(car.getPkaskoBrandName())) ||
+                             (StringUtils.isBlank(car.getPkaskoCarName()))){
+                        car.setPkaskoBrandName(pkaskoBrand.name);
+                        car.setPkaskoCarName(pkaskoCar.name);
+                        carService.simpleUpdate(car);
+                        count++;
+                    }
+                }
+
+                if (count == 0){
+                    Car car = cars.get(0);
+                    car.setPkaskoBrandName(pkaskoBrand.name);
+                    car.setPkaskoCarName(pkaskoCar.name);
+                    carService.simpleUpdate(car);
+                }
+            }
+        }
+    }
+
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public static class PkaskoBrand{
+        public String name;
+        public List<PkaskoCar> models;
+
+    }
+
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public static class PkaskoCar{
+        public String name;
+    }
+
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public static class ApiKey{
+        public String api_key;
+    }
 }

@@ -226,7 +226,7 @@ public class CalculateService {
         }
 
         creditResult.ap = ap;
-        creditResult.overpayment = ap*timeCredit - sk;
+        creditResult.overpayment = (double)Math.round(ap*timeCredit - sk);
         Double np = new Double(0);
         for (int i=0;i<calcFilter.getTime_credit();i++){
             np += sk*pc;
@@ -307,7 +307,7 @@ public class CalculateService {
         Integer df = 1;
         while (pf <= milage * 3){
             Float itr = (i1*pf + i2*df)*1.05f*1.04f*1.1f;
-            result.add(price - (price - price*(itr/100))*0.8f);
+            result.add((float)Math.round(price - (price - price*(itr/100))*0.8f));
             pf += milage;
             df++;
         }
@@ -325,16 +325,31 @@ public class CalculateService {
             serviceParams.complectation_id = complectation.getId();
             CalculateResult calculateResult = new CalculateResult();
             calculateResult.complectation = complectation;
-            calculateResult.TO = calcTOService(serviceParams);
-            calculateResult.month_fuel_cost = calcFuelCost(complectation.getEngineGearbox().getFuelConsumMixed(),
+
+            Float TO = calcTOService(serviceParams);
+            if (TO != null){
+                TO = (float)Math.round(TO.floatValue());
+            }
+            calculateResult.TO = TO;
+
+            Float fuel_cost = calcFuelCost(complectation.getEngineGearbox().getFuelConsumMixed(),
                     calcFilter.getMilage(), calcFilter.getFuel_price());
+            if (fuel_cost != null){
+                fuel_cost = (float)Math.round(fuel_cost.floatValue());
+            }
+            calculateResult.month_fuel_cost = fuel_cost;
+
             if (calcFilter.getIs_credit().equals(1)){
                 calculateResult.creditResult = calcCredit(calcFilter, complectation.getCar().getBrandId(), complectation.getPrice());
             }
 
             switch (calcFilter.getKind_of_insurance()){
                 case 1 :
-                    calculateResult.OSAGO_price = calculateOSAGO(calcFilter, complectation.getEngineGearbox().getPower());
+                    Float osago = calculateOSAGO(calcFilter, complectation.getEngineGearbox().getPower());
+                    if (osago != null){
+                        osago = (float)Math.round(osago);
+                    }
+                    calculateResult.OSAGO_price = osago;
                     break;
                 case 2:
                     //ToDo Запилить API для расчета КАСКО

@@ -35,6 +35,7 @@ public class ContextHolder {
     public static class Data{
         private Integer milage_partition;
         private User user;
+        private String activationUrl;
 
         public Integer getMilage_partition() {
             String milpart = MainConfig.get("milage.partition");
@@ -52,6 +53,14 @@ public class ContextHolder {
 
         public void setUser(User user) {
             this.user = user;
+        }
+
+        public String getActivationUrl() {
+            return MainConfig.get("activation.base.url");
+        }
+
+        public void setActivationUrl(String activationUrl) {
+            this.activationUrl = activationUrl;
         }
     }
 }

@@ -2,12 +2,14 @@ package com.main.cloudapi.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.main.cloudapi.entity.base.BaseEntity;
 import org.hibernate.validator.constraints.NotEmpty;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Table;
+import javax.persistence.Transient;
 import javax.validation.constraints.NotNull;
 
 /**
@@ -38,15 +40,17 @@ public class User extends BaseEntity {
     private Integer is_active;
     private String activation_link;
     private String access_token;
-    private String activation_date;
+    private Long activation_date;
     //</editor-fold>
 
     @Override
+    @Transient
     public String getTable() {
         return TABLE;
     }
 
     @Override
+    @Transient
     public String getObjectCategory() {
         return CATEGORY;
     }
@@ -66,10 +70,12 @@ public class User extends BaseEntity {
     }
 
     @Column(name = "pass")
+    @JsonIgnore
     public String getPass() {
         return pass;
     }
 
+    @JsonProperty
     public void setPass(String pass) {
         this.pass = pass;
     }
@@ -148,7 +154,7 @@ public class User extends BaseEntity {
 
     @Column(name = "status")
     public Integer getStatus() {
-        return status;
+        return (status==null)?0:status;
     }
 
     public void setStatus(Integer status) {
@@ -175,20 +181,24 @@ public class User extends BaseEntity {
         this.salt = salt;
     }
 
+    @JsonIgnore
     @Column(name = "is_active")
     public Integer getIs_active() {
-        return is_active;
+        return (is_active==null)?0:is_active;
     }
 
+    @JsonIgnore
     public void setIs_active(Integer is_active) {
         this.is_active = is_active;
     }
 
+    @JsonIgnore
     @Column(name = "activation_link")
     public String getActivation_link() {
         return activation_link;
     }
 
+    @JsonIgnore
     public void setActivation_link(String activation_link) {
         this.activation_link = activation_link;
     }
@@ -203,11 +213,11 @@ public class User extends BaseEntity {
     }
 
     @Column(name = "activation_date")
-    public String getActivation_date() {
+    public Long getActivation_date() {
         return activation_date;
     }
 
-    public void setActivation_date(String activation_date) {
+    public void setActivation_date(Long activation_date) {
         this.activation_date = activation_date;
     }
 }

@@ -33,6 +33,8 @@ public class Car extends BaseEntity {
     private String imgUrl2;
     private String imgUrl3;
     private String imgUrl4;
+    private String pkaskoBrandName;
+    private String pkaskoCarName;
     //</editor-fold>
 
     @Override
@@ -159,6 +161,24 @@ public class Car extends BaseEntity {
 
     public void setComplectations(Set<Complectation> complectations) {
         this.complectations = complectations;
+    }
+
+    @Column(name = "pkasko_brand_name")
+    public String getPkaskoBrandName() {
+        return pkaskoBrandName;
+    }
+
+    public void setPkaskoBrandName(String pkaskoBrandName) {
+        this.pkaskoBrandName = pkaskoBrandName;
+    }
+
+    @Column(name = "pkasko_car_name")
+    public String getPkaskoCarName() {
+        return pkaskoCarName;
+    }
+
+    public void setPkaskoCarName(String pkaskoCarName) {
+        this.pkaskoCarName = pkaskoCarName;
     }
 
     //</editor-fold>

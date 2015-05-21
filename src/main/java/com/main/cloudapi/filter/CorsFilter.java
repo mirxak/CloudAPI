@@ -1,9 +1,10 @@
 package com.main.cloudapi.filter;
 
-import com.sun.scenario.effect.FilterContext;
+import com.main.cloudapi.service.UserService;
+import com.main.cloudapi.service.callback.CallBackService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import javax.annotation.PreDestroy;
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;

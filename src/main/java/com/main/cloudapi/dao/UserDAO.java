@@ -17,6 +17,7 @@ import java.util.List;
  */
 @Repository
 public class UserDAO extends BaseDAO<User> {
+
     @Override
     public User getCurrentUser() {
         return null;
@@ -25,7 +26,7 @@ public class UserDAO extends BaseDAO<User> {
     public User getUserByLogin(String login) {
         Session session = getSession();
         Query query = session.createQuery("from " + User.class.getName() + " where login=:login and coalesce(is_deleted,0)<>1 ");
-        query.setString("login", login.toLowerCase().trim());
+        query.setString("login", login.trim());
         List<User> listUsers = (List<User>) query.list();
         return !listUsers.isEmpty() ? listUsers.get(0) : new User();
     }
@@ -39,7 +40,7 @@ public class UserDAO extends BaseDAO<User> {
 
     public boolean setActivationLink(String link,Long userId){
         Session session=getSession();
-        Query query = session.createQuery("update users set activation_link=:activation_link where id=:id and coalesce(is_deleted,0)<>1 ");
+        Query query = session.createQuery("update User set activation_link=:activation_link where id=:id and coalesce(is_deleted,0)<>1 ");
         query.setString("activation_link", link);
         query.setLong("id", userId);
         return query.executeUpdate()>0;
@@ -47,7 +48,7 @@ public class UserDAO extends BaseDAO<User> {
 
     public boolean activate(Long id) {
         Session session=getSession();
-        Query query = session.createQuery("update users set activation_link='', is_active=1,activation_date=:activation_date where id=:id");
+        Query query = session.createQuery("update User set activation_link='', is_active=1,activation_date=:activation_date where id=:id");
         query.setLong("activation_date", System.currentTimeMillis());
         query.setLong("id", id);
         return query.executeUpdate()>0;
@@ -56,7 +57,7 @@ public class UserDAO extends BaseDAO<User> {
     public User getByIdAndActivationLink(Long id, String activation_link) {
         Criteria c = getSession().createCriteria(User.class);
         c.add(Restrictions.eq("id", id));
-        c.add(Restrictions.eq("status",0));
+//        c.add(Restrictions.eq("status",0));
         c.add(Restrictions.sqlRestriction("activation_link=?",activation_link, StringType.INSTANCE));
         User u= (User) c.uniqueResult();
         return u==null?new User():u;
@@ -67,8 +68,8 @@ public class UserDAO extends BaseDAO<User> {
         String HashPass= UserHashPass.hashPass(password, salt);
         Session session=getSession();
 
-        Query query = session.createQuery("from users where login=:login and password=:password and coalesce(is_deleted,0)<>1 ");
-        query.setString("login", login.toLowerCase().trim());
+        Query query = session.createQuery("from User where login=:login and pass=:password and coalesce(is_deleted,0)<>1 ");
+        query.setString("login", login.trim());
         query.setString("password", HashPass);
         List<User> listUsers = (List<User>)query.list();
         return !listUsers.isEmpty() ?listUsers.get(0):new User();
@@ -79,9 +80,16 @@ public class UserDAO extends BaseDAO<User> {
     private String getSalt(String login){
         Session session=getSession();
         Query query = session.createQuery("select salt from User where login=:login and coalesce(is_deleted,0)<>1 ");
-        query.setString("login", login.toLowerCase().trim());
+        query.setString("login", login.trim());
         List<String> listSalt = (List<String>)query.list();
         return !listSalt.isEmpty() ?listSalt.get(0):"";
+    }
 
+    public User getByToken(String token){
+        Session session=getSession();
+        Query query = session.createQuery("from User where access_token=:token and coalesce(is_deleted,0)<>1 ");
+        query.setString("token", token.trim());
+        List<User> list = (List<User>)query.list();
+        return !list.isEmpty() ? list.get(0) : new User();
     }
 }

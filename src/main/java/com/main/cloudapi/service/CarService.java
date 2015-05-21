@@ -24,6 +24,10 @@ public class CarService {
     @Autowired
     BrandService brandService;
 
+    public CarDAO getDAO(){
+        return carDAO;
+    }
+
     public List<Car> getCarsOfBrand(Long brandID){
         List<Car> cars = carDAO.getAll(carDAO.STD_OFFSET, carDAO.STD_LIMIT, carDAO.createCriteria(brandID));
         if ((cars == null) || (cars.isEmpty())){

@@ -13,11 +13,12 @@ public interface UserControllerI {
 
     @RequestMapping(value="/{id}", method = RequestMethod.GET)
     @ResponseBody
-    public User getUser(@PathVariable String id);
+    public User getUser(@PathVariable String id,
+                        @RequestParam(value = "access_token", defaultValue = "", required = false)String access_token);
 
     @RequestMapping(method = RequestMethod.GET)
     @ResponseBody
-    public List<User> getUsers();
+    public List<User> getUsers(@RequestParam(value = "access_token", defaultValue = "", required = false)String access_token);
 
     @RequestMapping(value="register", method = RequestMethod.POST)
     @ResponseBody
@@ -27,16 +28,23 @@ public interface UserControllerI {
     @ResponseBody
     public User login(@RequestBody String json);
 
-    @RequestMapping(value = "{id}/activate", method = RequestMethod.POST)
+    @RequestMapping(value = "{id}/exit", method = RequestMethod.POST)
     @ResponseBody
-    User activate(@PathVariable String id, @RequestBody String json);
+    public User exit(@PathVariable String id,
+                     @RequestParam(value = "access_token", defaultValue = "", required = false)String access_token);
+
+    @RequestMapping(value = "{id}/activate/{activateToken}", method = RequestMethod.GET)
+    @ResponseBody
+    public User activate(@PathVariable String id, @PathVariable String activateToken);
 
     @RequestMapping(value="/{id}", method = RequestMethod.POST)
     @ResponseBody
-    public User editUser(@PathVariable String id, @RequestBody String json);
+    public User editUser(@PathVariable String id, @RequestBody String json,
+                         @RequestParam(value = "access_token", defaultValue = "", required = false)String access_token);
 
     @RequestMapping(value="/{id}", method = RequestMethod.DELETE)
     @ResponseBody
-    public User deleteUser(@PathVariable String id);
+    public User deleteUser(@PathVariable String id,
+                           @RequestParam(value = "access_token", defaultValue = "", required = false)String access_token);
 
 }

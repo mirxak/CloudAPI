@@ -4,17 +4,18 @@ import com.main.cloudapi.constmes.ThrowFabric;
 import com.main.cloudapi.dao.UserDAO;
 import com.main.cloudapi.entity.Mail;
 import com.main.cloudapi.entity.User;
-import com.main.cloudapi.utils.ContextHolder;
-import com.main.cloudapi.utils.JsonUtils;
-import com.main.cloudapi.utils.TokenUtils;
-import com.main.cloudapi.utils.UserHashPass;
+import com.main.cloudapi.utils.*;
 import org.apache.commons.lang3.StringUtils;
+import org.hibernate.Criteria;
+import org.hibernate.criterion.Restrictions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.mail.MessagingException;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -22,6 +23,8 @@ import java.util.Map;
  */
 @Service
 public class UserService {
+
+    public static final String BASE_URL = "http://intellect-drive.ru:8080/cloudapi-1.0/rest/api/cloudapi/user/";
 
     @Autowired
     UserDAO userDAO;
@@ -32,11 +35,90 @@ public class UserService {
     @Autowired
     TokenUtils tokenUtils;
 
+    private boolean checkPermission(Long id){
+        User curUser = getCurUser();
+        if ((curUser == null) || (curUser.getId() == null)){
+            return false;
+        }
+
+        if ((!curUser.getId().equals(id)) && (curUser.getStatus() != 2)){
+            return false;
+        }
+
+        return true;
+    }
+
+    public User getUser(Long id){
+        if (!checkPermission(id)){
+            throw new ThrowFabric.LockedException("Permission denied");
+        }
+
+        return userDAO.getById(id, User.class);
+    }
+
+    public void validateToken(String token){
+        User user = userDAO.getByToken(token);
+        if (user.getId() == null){
+            throw new ThrowFabric.UnAuthorizedException("token is invalid");
+        }
+
+        ContextHolder.setUser(user);
+    }
+
+    public List<User> getUsers(){
+        User curUser = getCurUser();
+        if ((curUser == null) || (curUser.getId() == null)){
+            throw new ThrowFabric.LockedException("Permission denied");
+        }
+
+        if (curUser.getStatus() != 2){
+            return Collections.singletonList(userDAO.getById(curUser.getId(), User.class));
+        }
+
+        return userDAO.getAll(User.class, 0, 10000);
+    }
+
+    @Transactional
+    public User editUser(Long id, String json){
+        if (!checkPermission(id)){
+            throw new ThrowFabric.LockedException("Permission denied");
+        }
+        User editU = JsonUtils.getFromJson(json, User.class, true);
+        User u = userDAO.getById(id, User.class);
+        u.setDrivingExperience(editU.getDrivingExperience());
+        u.setEmail(editU.getEmail());
+        u.setGender(editU.getGender());
+        u.setAge(editU.getAge());
+        u.setBirthDate(editU.getBirthDate());
+        u.setFirstname(editU.getFirstname());
+        u.setLastname(editU.getLastname());
+        u.setSecondname(editU.getSecondname());
+        u.setPhone(editU.getPhone());
+
+        return userDAO.update(u);
+    }
+
+    @Transactional
+    public User deleteUser(Long id){
+        if (!checkPermission(id)){
+            throw new ThrowFabric.LockedException("Permission denied");
+        }
+        User u = userDAO.getById(id, User.class);
+
+        userDAO.delete(u);
+        return u;
+    }
+
     public User register(String json){
         User user = JsonUtils.getFromJson(json, User.class, true);
         validateRegister(user);
-
         user.setLogin(user.getEmail());
+
+        User isExist = userDAO.getUserByLogin(user.getLogin());
+        if (isExist.getId()!=null){
+            throw new ThrowFabric.BadRequestException("user is already exist with this login");
+        }
+
         UserHashPass.securePass(user);
 
         add(user);
@@ -67,11 +149,12 @@ public class UserService {
         u = userDAO.Auth(user.getLogin(), user.getPass());
         if (u != null && u.getId() != null && u.getId() > 0) {
             u.setAccess_token(tokenUtils.getToken(u));
+            userDAO.update(u);
         }
 
-        ContextHolder.setUser(user);
+        ContextHolder.setUser(u);
 
-        return user;
+        return u;
     }
 
     @Transactional
@@ -105,7 +188,7 @@ public class UserService {
 //        notifications.setData(getUserData(u,new HashMap<String, String>()));
 //        producer.sendMail(notifications);
 
-        u = userDAO.getById(id);
+//        u = userDAO.getById(id);
 //        u.setAccess_token(tokenUtils.getToken(u));
 //        if (u.getStatus() == 0) {
 //            JsonWebContext.addMapperView(UserView.STATUS_0.class);
@@ -113,15 +196,37 @@ public class UserService {
         return u;
     }
 
-    private void sendActivationLink(String Link, User user, Map<String, String> data) {
+    @Transactional
+    public User exit(Long id){
+        if (!checkPermission(id)){
+            throw new ThrowFabric.LockedException("Permission denied");
+        }
+        User u = userDAO.getById(id, User.class);
+
+        u.setAccess_token("");
+        userDAO.update(u);
+        ContextHolder.setUser(null);
+        return u;
+    }
+
+    private void sendActivationLink(String link, User user, Map<String, String> data) {
+//        if (StringUtils.isBlank(ContextHolder.getData().getActivationUrl())){
+//            throw new ThrowFabric.BadRequestException("activation.base.url is empty");
+//        }
+//        String completeLink = ContextHolder.getData().getActivationUrl() + user.getId() +
+//                              "/activate/" + link;
+
+        String completeLink = BASE_URL + user.getId() + "/activate/" + link;
+
         Mail mail = new Mail();
         mail.setIs_sent(0);
         mail.setEmail(user.getEmail());
-        mail.setMessage(Link);
+        mail.setMessage(completeLink);
         mail.setSubject("Activation");
         try {
             emailSender.sendMail(mail);
         } catch (MessagingException e) {
+            e.printStackTrace();
             throw new ThrowFabric.BadRequestException("send mail fail");
         }
 
