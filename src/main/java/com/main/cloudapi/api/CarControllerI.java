@@ -23,14 +23,17 @@ public interface CarControllerI {
 
     @RequestMapping(method = RequestMethod.POST)
     @ResponseBody
-    public Car addCar(@PathVariable String brandID, @RequestBody String json);
+    public Car addCar(@PathVariable String brandID, @RequestBody String json,
+                      @RequestParam(value = "access_token", defaultValue = "", required = false)String access_token);
 
     @RequestMapping(value="/{id}", method = RequestMethod.POST)
     @ResponseBody
-    public Car editCar(@PathVariable String brandID, @PathVariable String id, @RequestBody String json);
+    public Car editCar(@PathVariable String brandID, @PathVariable String id, @RequestBody String json,
+                       @RequestParam(value = "access_token", defaultValue = "", required = false)String access_token);
 
     @RequestMapping(value="/{id}", method = RequestMethod.DELETE)
     @ResponseBody
-    public Car deleteCar(@PathVariable String brandID, @PathVariable String id);
+    public Car deleteCar(@PathVariable String brandID, @PathVariable String id,
+                         @RequestParam(value = "access_token", defaultValue = "", required = false)String access_token);
 
 }

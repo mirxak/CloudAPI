@@ -26,7 +26,7 @@ public interface MailControllerI {
 
     @RequestMapping(value = "/send-list", method = RequestMethod.POST)
     @ResponseBody
-    public List<Mail> sendList(@RequestBody String json);
+    public Mail sendList(@RequestBody String json);
 
     @RequestMapping(value = "{id}", method = RequestMethod.POST)
     @ResponseBody

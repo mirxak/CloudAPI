@@ -20,16 +20,19 @@ public interface EngineControllerI {
     @RequestMapping(method = RequestMethod.POST)
     @ResponseBody
     public EngineGearbox addEngineGearbox(@PathVariable String brandID, @PathVariable String carID,
-                        @PathVariable String cID, @RequestBody String json);
+                        @PathVariable String cID, @RequestBody String json,
+                        @RequestParam(value = "access_token", defaultValue = "", required = false)String access_token);
 
     @RequestMapping(value="/{id}", method = RequestMethod.POST)
     @ResponseBody
     public EngineGearbox editEngineGearbox(@PathVariable String brandID, @PathVariable String carID,
-                         @PathVariable String cID, @PathVariable String id, @RequestBody String json);
+                         @PathVariable String cID, @PathVariable String id, @RequestBody String json,
+                         @RequestParam(value = "access_token", defaultValue = "", required = false)String access_token);
 
     @RequestMapping(value="/{id}", method = RequestMethod.DELETE)
     @ResponseBody
     public EngineGearbox deleteEngineGearbox(@PathVariable String brandID, @PathVariable String carID,
-                           @PathVariable String cID, @PathVariable String id);
+                           @PathVariable String cID, @PathVariable String id,
+                           @RequestParam(value = "access_token", defaultValue = "", required = false)String access_token);
 
 }

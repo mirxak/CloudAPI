@@ -11,6 +11,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.List;
@@ -34,8 +35,12 @@ public class KaskoService {
         return ak.api_key;
     }
 
-    public List<KASKO.KaskoResult> calculateKASKO(CalcFilter calcFilter, Car car, Integer power,
+    public KASKO.CloudAPIResult calculateKASKO(Car car, Integer power,
                                                   Long price, Integer age, Integer drivingExp){
+        if ((StringUtils.isBlank(car.getPkaskoBrandName())) || (StringUtils.isBlank(car.getPkaskoCarName()))){
+            return null;
+        }
+
         String apiKey = getApiKey();
 
         KASKO.PkaskoCalcRequest requestBody = new KASKO.PkaskoCalcRequest();
@@ -63,13 +68,25 @@ public class KaskoService {
 
 //        Collections.singletonMap("X-Authorization", ak.api_key)
 
-        String result = callBackService.post("http://pkasko.ru/kasko/calc?api=1",
+        String response = callBackService.post("http://pkasko.ru/kasko/calc?api=1",
                                              JsonUtils.getJson(requestBody, true),
                                              Collections.singletonMap("X-Authorization",apiKey));
 
+        if (StringUtils.isBlank(response)){
+            throw new ThrowFabric.BadRequestException("Pkasko: response is empty");
+        }
 
+        KASKO.MainPkaskoCalcResponse mainResp = JsonUtils.getFromJson(response, KASKO.MainPkaskoCalcResponse.class, true);
 
-        return null;
+        if ((mainResp.results == null) || (mainResp.results.isEmpty())){
+            return null;
+        }
+
+        KASKO.CloudAPIResult outRes = new KASKO.CloudAPIResult();
+        outRes.osago = mainResp.results.get(0);
+        outRes.kasko = mainResp.results.subList(2,5);
+
+        return outRes;
     }
 
 

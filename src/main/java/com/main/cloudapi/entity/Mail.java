@@ -54,8 +54,8 @@ public class Mail extends BaseEntity {
         this.message = message;
     }
 
-    @NotNull(message = "email is null")
-    @NotEmpty(message = "email is empty")
+//    @NotNull(message = "email is null")
+//    @NotEmpty(message = "email is empty")
     @Column(name = "email")
     public String getEmail() {
         return email;

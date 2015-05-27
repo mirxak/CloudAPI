@@ -22,13 +22,16 @@ public interface SettingsControllerI {
 
     @RequestMapping(method = RequestMethod.POST)
     @ResponseBody
-    public Settings addSetting(@RequestBody String json);
+    public Settings addSetting(@RequestBody String json,
+                               @RequestParam(value = "access_token", defaultValue = "", required = false)String access_token);
 
     @RequestMapping(value = "/{id}", method = RequestMethod.POST)
     @ResponseBody
-    public Settings editSetting(@PathVariable String id, @RequestBody String json);
+    public Settings editSetting(@PathVariable String id, @RequestBody String json,
+                                @RequestParam(value = "access_token", defaultValue = "", required = false)String access_token);
 
     @RequestMapping(value = "/{id}", method = RequestMethod.DELETE)
     @ResponseBody
-    public Settings deleteSetting(@PathVariable String id);
+    public Settings deleteSetting(@PathVariable String id,
+                                  @RequestParam(value = "access_token", defaultValue = "", required = false)String access_token);
 }

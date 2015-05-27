@@ -85,7 +85,10 @@ public class EngineGearbox extends BaseEntity {
 
     @Column(name = "acceleration_to_hund")
     public Double getAccelerationToHund() {
-        return accelerationToHund;
+        if (this.accelerationToHund != null){
+            return (double)Math.round(this.accelerationToHund*10)/10;
+        }
+        return this.accelerationToHund;
     }
 
     public void setAccelerationToHund(Double accelerationToHund) {

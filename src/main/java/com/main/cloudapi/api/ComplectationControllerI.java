@@ -24,15 +24,18 @@ public interface ComplectationControllerI {
 
     @RequestMapping(method = RequestMethod.POST)
     @ResponseBody
-    public Complectation addComplectation(@PathVariable String brandID, @PathVariable String carID, @RequestBody String json);
+    public Complectation addComplectation(@PathVariable String brandID, @PathVariable String carID, @RequestBody String json,
+                                          @RequestParam(value = "access_token", defaultValue = "", required = false)String access_token);
 
     @RequestMapping(value="/{id}", method = RequestMethod.POST)
     @ResponseBody
-    public Complectation editComplectation(@PathVariable String brandID, @PathVariable String carID, @PathVariable String id, @RequestBody String json);
+    public Complectation editComplectation(@PathVariable String brandID, @PathVariable String carID, @PathVariable String id, @RequestBody String json,
+                                           @RequestParam(value = "access_token", defaultValue = "", required = false)String access_token);
 
     @RequestMapping(value="/{id}", method = RequestMethod.DELETE)
     @ResponseBody
-    public Complectation deleteComplectation(@PathVariable String brandID, @PathVariable String carID, @PathVariable String id);
+    public Complectation deleteComplectation(@PathVariable String brandID, @PathVariable String carID, @PathVariable String id,
+                                             @RequestParam(value = "access_token", defaultValue = "", required = false)String access_token);
 
 
 }

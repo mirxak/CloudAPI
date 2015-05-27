@@ -21,13 +21,16 @@ public interface CarServiceControllerI {
 
     @RequestMapping(method = RequestMethod.POST)
     @ResponseBody
-    public CarService addCarService(@RequestBody String json);
+    public CarService addCarService(@RequestBody String json,
+                                    @RequestParam(value = "access_token", defaultValue = "", required = false)String access_token);
 
     @RequestMapping(value = "/{id}", method = RequestMethod.POST)
     @ResponseBody
-    public CarService editCarService(@PathVariable String id, @RequestBody String json);
+    public CarService editCarService(@PathVariable String id, @RequestBody String json,
+                                     @RequestParam(value = "access_token", defaultValue = "", required = false)String access_token);
 
     @RequestMapping(value = "/{id}", method = RequestMethod.DELETE)
     @ResponseBody
-    public CarService deleteCarService(@PathVariable String id);
+    public CarService deleteCarService(@PathVariable String id,
+                                       @RequestParam(value = "access_token", defaultValue = "", required = false)String access_token);
 }

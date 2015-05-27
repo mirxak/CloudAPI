@@ -43,10 +43,10 @@ public class MailController extends BaseController implements MailControllerI {
     }
 
     @Override
-    public List<Mail> sendList(@RequestBody String json) {
-        List<Mail> mails = JsonUtils.getList(json, Mail.class, true);
+    public Mail sendList(@RequestBody String json) {
+        Mail mail = JsonUtils.getFromJson(json, Mail.class, true);
         try {
-            return emailSender.sendList(mails);
+            return emailSender.sendList(mail);
         } catch (MessagingException e) {
             throw new ThrowFabric.BadRequestException("send mails fail");
         }

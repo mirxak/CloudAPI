@@ -55,8 +55,36 @@ public class KASKO {
     }
 
     @JsonIgnoreProperties(ignoreUnknown = true)
-    public static class PkaskoCalcResponse{
-        public String id;
+    public static class MainPkaskoCalcResponse{
+        public List<PkaskoCalcResponse> results;
+    }
 
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public static class PkaskoCalcResponse{
+        public KaskoCalcPrice result;
+        public KInfo info;
+    }
+
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public static class KaskoCalcPrice{
+        public KPrice total;
+        public KPrice kasko;
+        public KPrice damage;
+    }
+
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public static class KPrice{
+        public Float premium;
+        public Float rate;
+    }
+
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public static class KInfo{
+        public String code;
+    }
+
+    public static class CloudAPIResult{
+        public PkaskoCalcResponse osago;
+        public List<PkaskoCalcResponse> kasko;
     }
 }

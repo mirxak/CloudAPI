@@ -25,6 +25,9 @@ public class ContextHolder {
     }
 
     public static User getUser(){
+        if (getData().getUser() == null){
+            return new User();
+        }
         return getData().getUser();
     }
 

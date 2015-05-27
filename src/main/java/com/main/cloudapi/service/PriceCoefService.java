@@ -28,6 +28,10 @@ public class PriceCoefService {
         return priceCoefDAO.getAll(BaseDAO.STD_OFFSET, BaseDAO.STD_LIMIT);
     }
 
+    public PriceCoefDAO getDAO(){
+        return priceCoefDAO;
+    }
+
     @Transactional
     public PriceCoef add(String json){
         PriceCoef priceCoef = JsonUtils.getFromJson(json, PriceCoef.class, true);

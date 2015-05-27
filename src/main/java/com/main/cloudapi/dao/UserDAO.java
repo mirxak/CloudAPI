@@ -10,6 +10,7 @@ import org.hibernate.criterion.Restrictions;
 import org.hibernate.type.StringType;
 import org.springframework.stereotype.Repository;
 
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -91,5 +92,16 @@ public class UserDAO extends BaseDAO<User> {
         query.setString("token", token.trim());
         List<User> list = (List<User>)query.list();
         return !list.isEmpty() ? list.get(0) : new User();
+    }
+
+    public List<String> getEmails(){
+        Session session = getSession();
+        Query query = session.createSQLQuery("select email from users where coalesce(is_deleted,0)<>1");
+        List<String> emails = query.list();
+        if ((emails == null) || (emails.isEmpty())){
+            return Collections.emptyList();
+        }
+
+        return emails;
     }
 }

@@ -22,13 +22,16 @@ public interface NewsControllerI {
 
     @RequestMapping(method = RequestMethod.POST)
     @ResponseBody
-    public News addNews(@RequestBody String json);
+    public News addNews(@RequestBody String json,
+                        @RequestParam(value = "access_token", defaultValue = "", required = false)String access_token);
 
     @RequestMapping(value = "/{id}", method = RequestMethod.POST)
     @ResponseBody
-    public News editNews(@PathVariable String id, @RequestBody String json);
+    public News editNews(@PathVariable String id, @RequestBody String json,
+                         @RequestParam(value = "access_token", defaultValue = "", required = false)String access_token);
 
     @RequestMapping(value = "/{id}", method = RequestMethod.DELETE)
     @ResponseBody
-    public News deleteNews(@PathVariable String id);
+    public News deleteNews(@PathVariable String id,
+                           @RequestParam(value = "access_token", defaultValue = "", required = false)String access_token);
 }

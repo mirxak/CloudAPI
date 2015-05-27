@@ -29,10 +29,19 @@ public class CalculateService {
     BrandService brandService;
 
     @Autowired
+    CarService carService1;
+
+    @Autowired
     CarServiceDAO carServiceDAO;
 
     @Autowired
     SettingsDAO settingsDAO;
+
+    @Autowired
+    KaskoService kaskoService;
+
+    @Autowired
+    PriceCoefService priceCoefService;
 
     @Autowired
     ComplectationDAO complectationDAO;
@@ -48,7 +57,8 @@ public class CalculateService {
         settingCrit.add(Restrictions.eq("name", "length_coef"));
         List<Settings> settingsList = settingsDAO.getAll(BaseDAO.STD_OFFSET, BaseDAO.STD_LIMIT, settingCrit);
         if ((settingsList == null) || (settingsList.isEmpty())){
-            throw new ThrowFabric.BadRequestException("error getting settings");
+//            throw new ThrowFabric.BadRequestException("error getting settings");
+            return null;
         }
         List<SettingsParameters.CoefLength> coefLengths = JsonUtils.getList(settingsList.get(0).getSetting(),
                                                      SettingsParameters.CoefLength.class, true);
@@ -62,10 +72,23 @@ public class CalculateService {
         }
 
         if (result == null){
-            throw new ThrowFabric.BadRequestException("settings.length is incorrect. car lenght is " + carLength);
+            return null;
         }
 
         return result;
+    }
+
+    public Float getPriceCoef(Long price){
+        Criteria criteria = priceCoefService.getDAO().createCriteria();
+        criteria.add(Restrictions.le("priceMin", price))
+                .add(Restrictions.ge("priceMax", price));
+
+        List<PriceCoef> priceCoefs = priceCoefService.getDAO().getAll(0, 1000, criteria);
+        if ((priceCoefs == null) || (priceCoefs.isEmpty())){
+            return null;
+        }
+
+        return priceCoefs.get(0).getCoef();
     }
 
     // Расчёт ТО на 3 года
@@ -74,9 +97,14 @@ public class CalculateService {
         List<com.main.cloudapi.entity.CarService> carServices;
         Criteria criteria = carServiceDAO.createCriteria();
         Integer milage_partition = ContextHolder.getData().getMilage_partition();
-//        Float lengthCoef = getLengthCoef(serviceParams);
-        Float lengthCoef = 1.0f; // временно
-        Float priceCoef = 0.5f; // временно
+        Float lengthCoef = getLengthCoef(serviceParams);
+        if (lengthCoef == null){
+            lengthCoef = 1.0f;
+        }
+        Float priceCoef = getPriceCoef(serviceParams.price);
+        if (priceCoef == null){
+            priceCoef = 1.0f;
+        }
         Float serviceCoef = (brand.getServiceCoef() == null) ? 1.0f : brand.getServiceCoef();
 
         Float price = new Float(0f);
@@ -175,16 +203,19 @@ public class CalculateService {
 
     //Расчет затрат на топливо в месяц
     private Float calcFuelCost(Integer fuelConsumMixed, Integer milage, Float fuelPrice){
+        if (fuelConsumMixed <= 0)return 0f;
         return (milage/1200)*fuelConsumMixed*fuelPrice;
     }
 
     //Расчет необходимого количества ёлок, которые нужно посадить, чтобы покрыть
     //загрязнение, исходя из co2 комплектации
     private Integer calculateFirTrees(Complectation complectation, Integer milage){
-        Random random = new Random();
-        // ToDo Временная заглушка. co2 нужно брать из комплектации
+        if (complectation.getCo2() == null){
+            return 0;
+        }
+
         // Расчитываем в кг, поэтому делим на 1000, т.к. в БД в граммах
-        Integer co2 = ((random.nextInt(100) + 100)*milage)/1000;
+        Integer co2 = (complectation.getCo2()*milage)/1000;
 
         // 120 - одна ель за год выделяет 120 кг О2
         return co2/120;
@@ -227,12 +258,14 @@ public class CalculateService {
 
         creditResult.ap = ap;
         creditResult.overpayment = (double)Math.round(ap*timeCredit - sk);
+        creditResult.percent_per_year = (float)Math.round(percent*10)/10;
+        creditResult.time_credit = timeCredit;
         Double np = new Double(0);
         for (int i=0;i<calcFilter.getTime_credit();i++){
             np += sk*pc;
             sk -= ap;
         }
-        creditResult.percent_per_year = np;
+        creditResult.np = (double)Math.round(np);
         return creditResult;
     }
 
@@ -256,7 +289,7 @@ public class CalculateService {
             percent = 0.26f;
         }
 
-        return percent/100;
+        return percent;
     }
 
     private Float getDurabilityCoef(Integer milage){
@@ -292,7 +325,7 @@ public class CalculateService {
             percent = 0f;
         }
 
-        return percent/100;
+        return percent;
     }
 
     // Расчет амортизации авто
@@ -303,24 +336,51 @@ public class CalculateService {
 
         List<Float> result = new ArrayList<>();
 
-        Integer pf = milage;
+        int mil = Math.round(milage/1000);
+        Integer pf = mil; // В данной формуле пробег указывается в тыс.км.
         Integer df = 1;
-        while (pf <= milage * 3){
+        while (pf <= mil * 3){
             Float itr = (i1*pf + i2*df)*1.05f*1.04f*1.1f;
-            result.add((float)Math.round(price - (price - price*(itr/100))*0.8f));
-            pf += milage;
+            itr = itr/100;
+            result.add((float)Math.round(price*itr));
+            pf += mil;
             df++;
         }
 
         return result;
     }
 
+    private Integer calcTax(int power){
+        Integer st = 0;
+        if (power <= 0)return 0;
+
+        if (power <= 100){
+            st = 24;
+        }
+        else if ((power > 100) && (power <= 150)){
+            st = 35;
+        }
+        else if ((power > 150) && (power <= 200)){
+            st = 50;
+        }
+        else if ((power > 200) && (power <= 250)){
+            st = 75;
+        }
+        else if (power > 250){
+            st = 150;
+        }
+
+        return st*power;
+    }
+
     private List<CalculateResult> fillCalculateResult(List<Complectation> complectations, CalcFilter calcFilter){
         List<CalculateResult> calculateResults = new ArrayList<>();
         for (Complectation complectation : complectations){
+            Car car = complectation.getCar();
+
             ServiceParams serviceParams = new ServiceParams();
             serviceParams.milage = calcFilter.getMilage();
-            serviceParams.brandId = complectation.getCar().getBrandId();
+            serviceParams.brandId = car.getBrandId();
             serviceParams.carId = complectation.getCarId();
             serviceParams.complectation_id = complectation.getId();
             CalculateResult calculateResult = new CalculateResult();
@@ -349,24 +409,47 @@ public class CalculateService {
                     if (osago != null){
                         osago = (float)Math.round(osago);
                     }
-                    calculateResult.OSAGO_price = osago;
+//                    KASKO.PkaskoCalcResponse osagoPrice = kaskoService.calculateKASKO(car, complectation.getEngineGearbox().getPower(),
+//                                                                   complectation.getPrice(),
+//                                                                   calcFilter.getAge(),
+//                                                                   calcFilter.getDriving_experience());
+                    calculateResult.osago = osago;
                     break;
                 case 2:
                     //ToDo Запилить API для расчета КАСКО
-                    calculateResult.KASKO_price = null;
+                    calculateResult.kasko = null;
                     break;
                 default:
                     break;
             }
+//            KASKO.CloudAPIResult mainPkaskoCalcResponse = kaskoService.calculateKASKO(car, complectation.getEngineGearbox().getPower(),
+//                                                                   complectation.getPrice(),
+//                                                                   calcFilter.getAge(),
+//                                                                   calcFilter.getDriving_experience());
+//            if (mainPkaskoCalcResponse != null){
+//                calculateResult.osago = mainPkaskoCalcResponse.osago;
+//                calculateResult.kasko = mainPkaskoCalcResponse.kasko;
+//            }
 
             calculateResult.amortization = calcAmortization(complectation, calcFilter.getMilage());
             // расчет в месяц
+            calculateResult.tax = calcTax(complectation.getEngineGearbox().getPower());
+
             Float expense = calculateResult.TO/36 + calculateResult.month_fuel_cost;
             if (calcFilter.getIs_credit().equals(1)){
                 expense += new Float(calculateResult.creditResult.ap);
             }
-            expense += calculateResult.OSAGO_price/12;
             expense += calculateResult.amortization.get(0)/12;
+
+            if (calculateResult.osago != null){
+                expense += (calculateResult.osago)/12;
+            }
+            if (calculateResult.kasko != null){
+//                expense += (calculateResult.kasko)
+                //ToDo
+            }
+            expense += calculateResult.tax/12;
+
             calculateResult.expense = expense;
 
             calculateResult.firTrees = calculateFirTrees(complectation, calcFilter.getMilage());
@@ -497,6 +580,7 @@ public class CalculateService {
         public Long brandId; // id марки
         public Long carId;
         public Long complectation_id;
+        public Long price;
     }
 
     public static class CalculateResult{
@@ -504,8 +588,9 @@ public class CalculateService {
         public Float TO;
         public Float month_fuel_cost;
         public CreditResult creditResult;
-        public Float OSAGO_price; // на 1 год
-        public Float KASKO_price;
+        public Float osago; // на 1 год
+        public Float kasko;
+        public Integer tax;
         public List<Float> amortization;
         public Float expense;
         public Integer firTrees; // на 1 год!
@@ -513,9 +598,10 @@ public class CalculateService {
 
     public static class CreditResult{
         public Double ap; // ежемесячный платеж по кредиту
-        public Integer kp; // срок кредитования
+        public Integer time_credit; // срок кредитования
         public Double overpayment;
-        public Double percent_per_year;
+        public Float percent_per_year;
+        public Double np;
     }
 
     public static class FrontendResult{

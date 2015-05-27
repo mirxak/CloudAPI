@@ -2,20 +2,20 @@ package com.main.cloudapi.service;
 
 import com.main.cloudapi.constmes.ThrowFabric;
 import com.main.cloudapi.dao.MailDAO;
+import com.main.cloudapi.dao.UserDAO;
 import com.main.cloudapi.entity.Mail;
 import com.main.cloudapi.utils.JsonUtils;
-import com.main.cloudapi.utils.MainConfig;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Properties;
 import javax.mail.*;
-import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Properties;
 
 /**
  * Created by mirxak on 16.05.15.
@@ -25,6 +25,9 @@ public class EmailSender {
 
     @Autowired
     MailDAO mailDAO;
+
+    @Autowired
+    UserDAO userDAO;
 
     public List<Mail> getAll(){
         return mailDAO.getAll(0, 10000);
@@ -68,7 +71,7 @@ public class EmailSender {
         Session session = Session.getInstance(properties, new Authenticator() {
             @Override
             protected PasswordAuthentication getPasswordAuthentication() {
-                return new PasswordAuthentication("intellectdrive", "bonus2014");
+                return new PasswordAuthentication("intellectdrive", "bonus20144");
             }
         });
 
@@ -84,11 +87,20 @@ public class EmailSender {
         return mail;
     }
 
-    public List<Mail> sendList(List<Mail> mails) throws MessagingException {
-        List<Mail> result = new ArrayList<>();
-        for (Mail mail : mails){
-            result.add(sendMail(mail));
+    public Mail sendList(Mail mailtoSend) throws MessagingException {
+        List<String> emails = userDAO.getEmails();
+        if (emails.isEmpty()){
+            throw new ThrowFabric.BadRequestException("There are no users emails");
         }
-        return result;
+
+        for (String email : emails){
+            Mail mail = new Mail();
+            mail.setSubject(mailtoSend.getSubject());
+            mail.setMessage(mailtoSend.getMessage());
+            mail.setEmail(email);
+            sendMail(mail);
+        }
+
+        return mailtoSend;
     }
 }

@@ -168,6 +168,12 @@ public class TestBD extends AbstractTransactionalTestNGSpringContextTests {
         }
     }
 
+    @Test(enabled = true)
+    public void testCalculate(){
+        String json = "{\"complectation_filter\":{\"brand_ids\":[211,213,210],\"gearbox\":[\"Автоматическая\",\"Робот\",\"Вариатор\",\"Механическая\"],\"gearing\":[\"Полный\",\"Задний\"],\"complectation_price_min\":100000,\"complectation_price_max\":10000000},\"user_complectations\":[],\"fuel_price\":35,\"milage\":15000,\"age\":25,\"driving_experience\":5,\"is_credit\":1,\"time_credit\":\"36\",\"first_payment\":\"500000\",\"ap\":\"50000\",\"kind_of_insurance\":1, \"percent\":20}";
+        calculateService.calculateMain(json);
+    }
+
     @JsonIgnoreProperties(ignoreUnknown = true)
     public static class PkaskoBrand{
         public String name;

@@ -35,7 +35,7 @@ public class UserService {
     @Autowired
     TokenUtils tokenUtils;
 
-    private boolean checkPermission(Long id){
+    public boolean checkPermission(Long id){
         User curUser = getCurUser();
         if ((curUser == null) || (curUser.getId() == null)){
             return false;

@@ -29,16 +29,19 @@ public interface BodyControllerI {
     @RequestMapping(method = RequestMethod.POST)
     @ResponseBody
     public Body addBody(@PathVariable String brandID, @PathVariable String carID,
-                         @PathVariable String cID, @RequestBody String json);
+                         @PathVariable String cID, @RequestBody String json,
+                         @RequestParam(value = "access_token", defaultValue = "", required = false)String access_token);
 
     @RequestMapping(value="/{id}", method = RequestMethod.POST)
     @ResponseBody
     public Body editBody(@PathVariable String brandID, @PathVariable String carID,
-                          @PathVariable String cID, @PathVariable String id, @RequestBody String json);
+                          @PathVariable String cID, @PathVariable String id, @RequestBody String json,
+                          @RequestParam(value = "access_token", defaultValue = "", required = false)String access_token);
 
     @RequestMapping(value="/{id}", method = RequestMethod.DELETE)
     @ResponseBody
     public Body deleteBody(@PathVariable String brandID, @PathVariable String carID,
-                            @PathVariable String cID, @PathVariable String id);
+                            @PathVariable String cID, @PathVariable String id,
+                            @RequestParam(value = "access_token", defaultValue = "", required = false)String access_token);
 
 }

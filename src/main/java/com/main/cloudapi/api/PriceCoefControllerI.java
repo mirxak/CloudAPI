@@ -22,13 +22,16 @@ public interface PriceCoefControllerI {
 
     @RequestMapping(method = RequestMethod.POST)
     @ResponseBody
-    public PriceCoef addPriceCoef(@RequestBody String json);
+    public PriceCoef addPriceCoef(@RequestBody String json,
+                                  @RequestParam(value = "access_token", defaultValue = "", required = false)String access_token);
 
     @RequestMapping(value = "/{id}", method = RequestMethod.POST)
     @ResponseBody
-    public PriceCoef editPriceCoef(@PathVariable String id, @RequestBody String json);
+    public PriceCoef editPriceCoef(@PathVariable String id, @RequestBody String json,
+                                   @RequestParam(value = "access_token", defaultValue = "", required = false)String access_token);
 
     @RequestMapping(value = "/{id}", method = RequestMethod.DELETE)
     @ResponseBody
-    public PriceCoef deletePriceCoef(@PathVariable String id);
+    public PriceCoef deletePriceCoef(@PathVariable String id,
+                                     @RequestParam(value = "access_token", defaultValue = "", required = false)String access_token);
 }
